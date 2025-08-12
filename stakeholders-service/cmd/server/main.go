@@ -1,30 +1,34 @@
 package main
 
 import (
-	"database/sql"
 	"fmt"
 	"log"
+	"net/http"
 	"os"
-	_ "github.com/lib/pq" 
+
+	"github.com/gorilla/mux"
+	"stakeholders-service/db"
+	"stakeholders-service/internal/handlers"
+	"stakeholders-service/internal/repository"
 )
 
 func main() {
-	user := os.Getenv("DB_USER")
-	password := os.Getenv("DB_PASSWORD")
-	dbname := os.Getenv("DB_NAME")
-
-	connStr := fmt.Sprintf("host=stakeholders-db port=5432 user=%s password=%s dbname=%s sslmode=disable", user, password, dbname)
-
-	db, err := sql.Open("postgres", connStr)
+	database, err := db.InitDB()
 	if err != nil {
-		log.Fatal("Failed to open a connection to the database:", err)
+		log.Fatalf("Could not connect to database: %v", err)
 	}
-	defer db.Close()
+	defer database.Close()
 
-	err = db.Ping()
-	if err != nil {
-		log.Fatal("Failed to connect to the database:", err)
+	userRepo := repository.NewUserRepository(database)
+	userHandler := handlers.NewUserHandler(userRepo)
+
+	router := mux.NewRouter()
+	router.HandleFunc("/api/register", userHandler.RegisterUser).Methods("POST")
+
+	port := os.Getenv("PORT")
+	if port == "" {
+		port = "8080"
 	}
-
-	fmt.Println("Successfully connected to the database!")
+	fmt.Printf("Server is running on port %s...\n", port)
+	log.Fatal(http.ListenAndServe(":"+port, router))
 }
