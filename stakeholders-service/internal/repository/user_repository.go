@@ -103,3 +103,87 @@ func (r *UserRepository) UserExists(username, email string) (bool, bool, error) 
 
 	return usernameExists, emailExists, nil
 }
+
+func (r *UserRepository) GetAllUsers() ([]models.User, error) {
+	query := `SELECT id, username, email, role, name, surname, biography, moto, photo_url, is_blocked FROM users ORDER BY id`
+	
+	rows, err := r.DB.Query(query)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get users: %w", err)
+	}
+	defer rows.Close()
+
+	var users []models.User
+	for rows.Next() {
+		var user models.User
+		err := rows.Scan(
+			&user.ID,
+			&user.Username,
+			&user.Email,
+			&user.Role,
+			&user.Name,
+			&user.Surname,
+			&user.Biography,
+			&user.Moto,
+			&user.PhotoURL,
+			&user.IsBlocked,
+		)
+		if err != nil {
+			return nil, fmt.Errorf("failed to scan user: %w", err)
+		}
+		users = append(users, user)
+	}
+
+	if err = rows.Err(); err != nil {
+		return nil, fmt.Errorf("error iterating users: %w", err)
+	}
+
+	return users, nil
+}
+
+func (r *UserRepository) GetUserByID(id int) (*models.User, error) {
+	var user models.User
+	query := `SELECT id, username, email, role, name, surname, biography, moto, photo_url, is_blocked FROM users WHERE id = $1`
+
+	err := r.DB.QueryRow(query, id).Scan(
+		&user.ID,
+		&user.Username,
+		&user.Email,
+		&user.Role,
+		&user.Name,
+		&user.Surname,
+		&user.Biography,
+		&user.Moto,
+		&user.PhotoURL,
+		&user.IsBlocked,
+	)
+
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil, fmt.Errorf("user not found")
+		}
+		return nil, fmt.Errorf("failed to get user: %w", err)
+	}
+
+	return &user, nil
+}
+
+func (r *UserRepository) UpdateUserBlockStatus(id int, isBlocked bool) error {
+	query := `UPDATE users SET is_blocked = $1 WHERE id = $2`
+	
+	result, err := r.DB.Exec(query, isBlocked, id)
+	if err != nil {
+		return fmt.Errorf("failed to update user block status: %w", err)
+	}
+
+	rowsAffected, err := result.RowsAffected()
+	if err != nil {
+		return fmt.Errorf("failed to get rows affected: %w", err)
+	}
+
+	if rowsAffected == 0 {
+		return fmt.Errorf("user not found")
+	}
+
+	return nil
+}
