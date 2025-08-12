@@ -6,3 +6,7 @@ exports.createBlog = async (blogData) => {
   
   return newBlog;
 };
+
+exports.getAllBlogs = async () => {
+  return await blogRepository.getAll();
+};

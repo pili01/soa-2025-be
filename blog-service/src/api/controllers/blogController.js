@@ -18,3 +18,11 @@ exports.createBlog = async (req, res, next) => {
     });
   }
 };
+
+exports.getAllBlogs = async (req, res) => {
+  try {
+    const blogs = await blogService.getAllBlogs();
+    res.status(200).json({ success: true, data: blogs });
+  } catch (error) {
+  }
+};

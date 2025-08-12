@@ -5,3 +5,7 @@ exports.create = async (blogData) => {
     data: blogData,
   });
 };
+
+exports.getAll = async () => {
+  return prisma.blog.findMany();
+};
