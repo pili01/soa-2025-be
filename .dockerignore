@@ -1,0 +1,15 @@
+# Git
+.git
+.gitignore
+
+# Docker
+.dockerignore
+docker-compose.yml
+
+# IDE-specific files
+.vscode/
+.idea/
+.DS_Store
+
+# Documentation
+README.md
