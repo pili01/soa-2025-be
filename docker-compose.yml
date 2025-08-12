@@ -1,0 +1,31 @@
+services:
+  stakeholders-db:
+    image: postgres:17.5
+    container_name: stakeholders-db
+    env_file:
+      - ./stakeholders-service/db/.env
+    ports:
+      - "5433:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    volumes:
+      - stakeholders_db_data:/var/lib/postgresql/data
+  
+  stakeholders-service:
+    build:
+      context: ./stakeholders-service
+      dockerfile: .Dockerfile
+    container_name: stakeholders-service
+    ports:
+      - "8080:8080"
+    depends_on:
+      stakeholders-db:
+        condition: service_healthy
+    env_file:
+      - ./stakeholders-service/.env
+
+volumes:
+  stakeholders_db_data:
