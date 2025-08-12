@@ -3,7 +3,7 @@ package models
 type User struct {
 	ID        int       `json:"id"`
 	Username  string    `json:"username"`
-	Password  string    `json:"-"` // Password should not be exposed in JSON
+	Password  string    `json:"-"` 
 	Email     string    `json:"email"`
 	Role      string    `json:"role"` // Admin, Guide, Tourist
 	Name      string    `json:"name"`
