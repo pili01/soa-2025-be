@@ -28,5 +28,47 @@ services:
     env_file:
       - ./stakeholders-service/.env
 
+  blog-db:
+    image: postgres:14-alpine
+    container_name: postgres_blog_db
+    restart: always
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: super
+      POSTGRES_DB: blogSOA
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    volumes:
+      - blog-db-data:/var/lib/postgresql/data
+    networks:
+      - app-network
+
+  blog-service:
+    build:
+      context: ./blog-service
+      dockerfile: .Dockerfile
+    container_name: blog_service_app
+    restart: always
+    ports:
+      - "3000:3000"
+    depends_on:
+      blog-db:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: "postgresql://postgres:super@blog-db:5432/blogSOA?schema=public"
+    networks:
+      - app-network
+
 volumes:
   stakeholders_db_data:
+  blog-db-data:
+
+networks:
+  app-network:
+    driver: bridge
+  
