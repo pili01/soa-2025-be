@@ -1,0 +1,19 @@
+# Node modules
+node_modules
+npm-debug.log
+yarn-error.log
+
+# Logs
+logs
+*.log
+
+# OS generated files
+.DS_Store
+Thumbs.db
+
+# Environment files (optional, if you don’t want to copy .env)
+.env
+
+# Build output (if any)
+dist
+build
