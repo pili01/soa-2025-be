@@ -92,6 +92,19 @@ services:
         condition: service_healthy
     env_file:
       - ./tours-service/.env
+  
+  image-service:
+    build:
+      context: ./image-service
+      dockerfile: .Dockerfile   
+    container_name: image-service
+    ports:
+      - "3031:3000"  
+    env_file:
+      - ./image-service/.env
+    volumes:
+      - ./image-service/uploads:/usr/src/app/uploads
+    restart: unless-stopped
 
 volumes:
   stakeholders-db-data:
