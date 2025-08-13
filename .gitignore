@@ -145,3 +145,5 @@ vite.config.ts.timestamp-*
 
 # Dependencies
 /vendor/
+
+/generated/prisma
