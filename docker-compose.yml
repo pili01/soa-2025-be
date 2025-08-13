@@ -45,8 +45,6 @@ services:
       retries: 5
     volumes:
       - blog-db-data:/var/lib/postgresql/data
-    networks:
-      - app-network
 
   blog-service:
     build:
@@ -65,14 +63,9 @@ services:
       - ./blog-service:/app
       - /app/node_modules
     command: npx nodemon src/app.js
-    networks:
-      - app-network
 
 volumes:
   stakeholders_db_data:
   blog-db-data:
 
-networks:
-  app-network:
-    driver: bridge
   
