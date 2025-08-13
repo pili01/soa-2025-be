@@ -59,10 +59,7 @@ services:
         condition: service_healthy
     environment:
       DATABASE_URL: "postgresql://postgres:super@blog-db:5432/blogSOA?schema=public"
-    volumes:
-      - ./blog-service:/app
-      - /app/node_modules
-    command: npx nodemon src/app.js
+    command: ["node", "src/app.js"]
 
 volumes:
   stakeholders_db_data:
