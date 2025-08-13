@@ -9,7 +9,7 @@ import (
 	"github.com/gorilla/mux"
 	"stakeholders-service/db"
 	"stakeholders-service/internal/handlers"
-	"stakeholders-service/internal/repository"
+	"stakeholders-service/internal/repositories"
 )
 
 func main() {
@@ -26,8 +26,7 @@ func main() {
 	router.HandleFunc("/api/register", userHandler.RegisterUser).Methods("POST")
 	router.HandleFunc("/api/login", userHandler.LoginUser).Methods("POST")
 	router.HandleFunc("/api/profile", userHandler.GetMyProfile).Methods("GET")
-	
-	
+	router.HandleFunc("/api/validateRole", userHandler.ValidateRole).Methods("POST")
 	router.HandleFunc("/api/admin/users", userHandler.GetAllUsers).Methods("GET")
 	router.HandleFunc("/api/admin/users/block", userHandler.BlockUser).Methods("PUT")
 
