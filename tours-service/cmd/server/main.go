@@ -41,7 +41,7 @@ func main() {
 	router.HandleFunc("/api/my-tours", tourHandler.GetToursByAuthor).Methods("GET")
 	
 	// Keypoint routes
-	router.HandleFunc("/api/tours/{tourId}/keypoints", keypointHandler.CreateKeypoint).Methods("POST")
+	router.HandleFunc("/api/tours/{tourId}/addKeypoint", keypointHandler.CreateKeypoint).Methods("POST")
 	router.HandleFunc("/api/tours/{tourId}/keypoints", keypointHandler.GetKeypointsByTourID).Methods("GET")
 	router.HandleFunc("/api/keypoints/{keypointId}", keypointHandler.GetKeypointByID).Methods("GET")
 	router.HandleFunc("/api/keypoints/{keypointId}", keypointHandler.UpdateKeypoint).Methods("PUT")
