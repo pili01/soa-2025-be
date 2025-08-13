@@ -1,4 +1,4 @@
-package repository
+package repositories
 
 import (
 	"context"
@@ -84,4 +84,22 @@ func (r *TourRepository) GetToursByAuthorID(authorID int) ([]models.Tour, error)
 	}
 
 	return tours, nil
+}
+
+func (r *TourRepository) GetTourByID(tourID int) (*models.Tour, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	filter := bson.M{"_id": tourID}
+
+	var tour models.Tour
+	err := r.Collection.FindOne(ctx, filter).Decode(&tour)
+	if err != nil {
+		if err == mongo.ErrNoDocuments {
+			return nil, errors.New("tour not found")
+		}
+		return nil, fmt.Errorf("failed to find tour: %w", err)
+	}
+
+	return &tour, nil
 }
