@@ -11,10 +11,10 @@ import (
 )
 
 type TourHandler struct {
-	tourRepo *repository.TourRepository
+	tourRepo *repositories.TourRepository
 }
 
-func NewTourHandler(repo *repository.TourRepository) *TourHandler {
+func NewTourHandler(repo *repositories.TourRepository) *TourHandler {
 	return &TourHandler{tourRepo: repo}
 }
 
