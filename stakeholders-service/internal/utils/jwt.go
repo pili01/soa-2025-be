@@ -7,6 +7,7 @@ import (
 	"strconv"
 	"os"
 	"github.com/dgrijalva/jwt-go"
+	"stakeholders-service/internal/models"
 )
 
 var jwtKey []byte
@@ -25,19 +26,24 @@ func init() {
 }
 
 type Claims struct {
+	ID       int    `json:"id"`
 	Username string `json:"username"`
 	Role     string `json:"role"`
 	jwt.StandardClaims
 }
 
-func GenerateToken(username, role string) (string, error) {
+func GenerateToken(user *models.User) (string, error) {
 	expirationStr := os.Getenv("JWT_EXPIRATION")
+	if expirationStr == "" {
+		expirationStr = "60" 
+	}
 	expirationMinutes, err := strconv.Atoi(expirationStr)
 	expirationTime := time.Now().Add(time.Duration(expirationMinutes) * time.Minute)
 
 	claims := &Claims{
-		Username: username,
-		Role:     role,
+		ID:       user.ID,
+		Username: user.Username,
+		Role:     user.Role,
 		StandardClaims: jwt.StandardClaims{
 			ExpiresAt: expirationTime.Unix(),
 		},

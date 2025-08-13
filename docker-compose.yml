@@ -12,7 +12,7 @@ services:
       timeout: 5s
       retries: 5
     volumes:
-      - stakeholders_db_data:/var/lib/postgresql/data
+      - stakeholders-db-data:/var/lib/postgresql/data
       - ./stakeholders-service/db:/docker-entrypoint-initdb.d
   
   stakeholders-service:
@@ -61,8 +61,51 @@ services:
       DATABASE_URL: "postgresql://postgres:super@blog-db:5432/blogSOA?schema=public"
     command: ["node", "src/app.js"]
 
+  tours-db:
+    image: mongo:8.0
+    container_name: tours-db
+    env_file:
+      - ./tours-service/db/.env
+    ports:
+      - "5435:27017"
+    healthcheck:
+      test: ["CMD-SHELL", "mongosh --eval 'db.adminCommand(\"ping\")'"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    volumes:
+      - tours-db-data:/data/db
+      - ./tours-service/db/init.js:/docker-entrypoint-initdb.d/init.js:ro
+      
+  tours-service:
+    build:
+      context: ./tours-service
+      dockerfile: .Dockerfile
+    container_name: tours-service
+    ports:
+      - "8081:8080"
+    depends_on:
+      tours-db:
+        condition: service_healthy
+    env_file:
+      - ./tours-service/.env
+  
+  image-service:
+    build:
+      context: ./image-service
+      dockerfile: .Dockerfile   
+    container_name: image-service
+    ports:
+      - "3031:3000"  
+    env_file:
+      - ./image-service/.env
+    volumes:
+      - ./image-service/uploads:/usr/src/app/uploads
+    restart: unless-stopped
+
 volumes:
-  stakeholders_db_data:
+  stakeholders-db-data:
   blog-db-data:
+  tours-db-data:
 
   
