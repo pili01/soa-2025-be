@@ -1,10 +1,11 @@
 package repository
 
 import (
-	"fmt"
 	"database/sql"
-	"golang.org/x/crypto/bcrypt"
+	"fmt"
 	"stakeholders-service/internal/models"
+
+	"golang.org/x/crypto/bcrypt"
 )
 
 type UserRepository struct {
@@ -106,7 +107,7 @@ func (r *UserRepository) UserExists(username, email string) (bool, bool, error) 
 
 func (r *UserRepository) GetAllUsers() ([]models.User, error) {
 	query := `SELECT id, username, email, role, name, surname, biography, moto, photo_url, is_blocked FROM users ORDER BY id`
-	
+
 	rows, err := r.DB.Query(query)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get users: %w", err)
@@ -170,7 +171,7 @@ func (r *UserRepository) GetUserByID(id int) (*models.User, error) {
 
 func (r *UserRepository) UpdateUserBlockStatus(id int, isBlocked bool) error {
 	query := `UPDATE users SET is_blocked = $1 WHERE id = $2`
-	
+
 	result, err := r.DB.Exec(query, isBlocked, id)
 	if err != nil {
 		return fmt.Errorf("failed to update user block status: %w", err)
@@ -185,5 +186,14 @@ func (r *UserRepository) UpdateUserBlockStatus(id int, isBlocked bool) error {
 		return fmt.Errorf("user not found")
 	}
 
+	return nil
+}
+
+func (r *UserRepository) UpdateProfile(user *models.User) error {
+	query := `UPDATE users SET name = $1, surname = $2, biography = $3, moto = $4, photo_url = $5 WHERE id = $6`
+	_, err := r.DB.Exec(query, user.Name, user.Surname, user.Biography, user.Moto, user.PhotoURL, user.ID)
+	if err != nil {
+		return fmt.Errorf("failed to update user profile: %w", err)
+	}
 	return nil
 }

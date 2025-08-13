@@ -148,7 +148,7 @@ func (h *UserHandler) GetMyProfile(w http.ResponseWriter, r *http.Request) {
 
 	user, err := h.userRepo.GetUserByUsername(claims.Username)
 	if err != nil {
-		if err == sql.ErrNoRows || err.Error() == "user not found" {
+		if err == sql.ErrNoRows {
 			http.Error(w, "User not found", http.StatusNotFound)
 			return
 		}
@@ -159,6 +159,60 @@ func (h *UserHandler) GetMyProfile(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(user)
+}
+
+func (h *UserHandler) UpdateMyProfile(w http.ResponseWriter, r *http.Request) {
+	tokenString := r.Header.Get("Authorization")
+	if tokenString == "" {
+		http.Error(w, "Authorization token is missing", http.StatusUnauthorized)
+		return
+	}
+
+	tokenString = strings.TrimPrefix(tokenString, "Bearer ")
+	claims, err := utils.ValidateToken(tokenString)
+	if err != nil {
+		http.Error(w, "Invalid token", http.StatusUnauthorized)
+		return
+	}
+
+	user, err := h.userRepo.GetUserByUsername(claims.Username)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			http.Error(w, "User not found", http.StatusNotFound)
+			return
+		}
+		http.Error(w, "Failed to retrieve user data", http.StatusInternalServerError)
+		return
+	}
+
+	var requestData struct {
+		Name      string `json:"name"`
+		Surname   string `json:"surname"`
+		Biography string `json:"biography"`
+		Moto      string `json:"moto"`
+		PhotoURL  string `json:"photo_url"`
+	}
+	err = json.NewDecoder(r.Body).Decode(&requestData)
+	if err != nil {
+		http.Error(w, "Invalid request body", http.StatusBadRequest)
+		return
+	}
+
+	user.Name = requestData.Name
+	user.Surname = requestData.Surname
+	user.Biography = requestData.Biography
+	user.Moto = requestData.Moto
+	user.PhotoURL = requestData.PhotoURL
+
+	err = h.userRepo.UpdateProfile(user)
+	if err != nil {
+		http.Error(w, "Failed to update user profile", http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(map[string]string{"message": "Profile updated successfully!"})
 }
 
 func (h *UserHandler) GetAllUsers(w http.ResponseWriter, r *http.Request) {
