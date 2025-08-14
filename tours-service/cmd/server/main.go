@@ -30,9 +30,12 @@ func main() {
 
 	tourRepo := repositories.NewTourRepository(toursDB)
 	keypointRepo := repositories.NewKeypointRepository(toursDB)
+	reviewRepo := repositories.NewTourReviewRepository(toursDB)
+	
 	
 	tourHandler := handlers.NewTourHandler(tourRepo)
 	keypointHandler := handlers.NewKeypointHandler(keypointRepo, tourRepo)
+	reviewHandler := handlers.NewTourReviewHandler(reviewRepo, tourRepo)
 
 	router := mux.NewRouter()
 	
@@ -46,6 +49,10 @@ func main() {
 	router.HandleFunc("/api/keypoints/{keypointId}", keypointHandler.GetKeypointByID).Methods("GET")
 	router.HandleFunc("/api/keypoints/{keypointId}", keypointHandler.UpdateKeypoint).Methods("PUT")
 	router.HandleFunc("/api/keypoints/{keypointId}", keypointHandler.DeleteKeypoint).Methods("DELETE")
+
+	// Review routes
+	router.HandleFunc("/api/reviews", reviewHandler.CreateTourReview).Methods("POST")
+	router.HandleFunc("/api/tours/{tourId}/reviews", reviewHandler.GetReviewsByTourID).Methods("GET")
 
 	port := os.Getenv("PORT")
 	if port == "" {

@@ -25,4 +25,5 @@ type Tour struct {
 	Status TourStatus `bson:"status" json:"status"` // Draft, Published, Archived
 	Price float64 `bson:"price" json:"price"`
 	Keypoints []Keypoint `bson:"keypoints,omitempty" json:"keypoints,omitempty"` // Lista keypoint-a
+	Reviews []TourReview `bson:"reviews,omitempty" json:"reviews,omitempty"`
 }

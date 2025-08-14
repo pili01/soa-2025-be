@@ -6,6 +6,7 @@ const app = express();
 app.use(express.json());
 
 app.use('/ProfilePictures', express.static('uploads/ProfilePictures'));
+app.use('/uploads/TourReviewPictures', express.static('uploads/TourReviewPictures'));
 app.use('/api', imageRoutes);
 
 const PORT = process.env.PORT || 3000;
