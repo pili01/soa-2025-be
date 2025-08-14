@@ -11,7 +11,6 @@ exports.createBlog = async (req, res, next) => {
       data: newBlog,
     });
   } catch (error) {
-    console.error('Greška u createBlog kontroleru:', error);
     res.status(500).json({
       success: false,
       message: 'Došlo je do greške na serveru.',
@@ -24,5 +23,9 @@ exports.getAllBlogs = async (req, res) => {
     const blogs = await blogService.getAllBlogs();
     res.status(200).json({ success: true, data: blogs });
   } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: "There is an error that occured. ",
+    });
   }
 };

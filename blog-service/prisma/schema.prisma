@@ -13,5 +13,34 @@ model Blog {
   content   String
   createdAt DateTime @default(now()) @map("created_at")
 
+  likes    BlogLike[]
+  comments BlogComment[]
+
   @@map("blogs")
+}
+
+model BlogLike {
+  userId    Int
+  blogId    Int
+  createdAt DateTime @default(now()) @map("created_at")
+
+  blog Blog @relation(fields: [blogId], references: [id], onDelete: Cascade)
+
+  @@id([userId, blogId])
+  @@index([blogId])
+  @@index([createdAt])
+  @@map("blog_likes")
+}
+
+model BlogComment {
+  id        Int      @id @default(autoincrement())
+  blogId    Int
+  userId    Int
+  content   String
+  createdAt DateTime @default(now()) @map("created_at")
+  blog      Blog     @relation(fields: [blogId], references: [id], onDelete: Cascade)
+
+  @@index([blogId])
+  @@index([userId])
+  @@map("blog_comments")
 }

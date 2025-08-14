@@ -1,4 +1,4 @@
- require('dotenv').config(); 
+require('dotenv').config();
 
 const express = require('express');
 const apiRouter = require('./api/routes');
@@ -19,6 +19,14 @@ app.use((req, res, next) => {
 
 app.listen(port, () => {
   console.log(`Blog servis sluša na portu ${port}`);
+});
+
+app.use((err, req, res, next) => {
+  console.error(err); // logovanje greške
+  res.status(500).json({
+    success: false,
+    message: err.message || 'Došlo je do greške na serveru.'
+  });
 });
 
 module.exports = app;
