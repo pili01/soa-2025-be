@@ -17,13 +17,13 @@ type Counter struct {
 }
 
 type TourRepository struct {
-	Collection        *mongo.Collection
+	Collection          *mongo.Collection
 	CountersCollection *mongo.Collection
 }
 
 func NewTourRepository(db *mongo.Database) *TourRepository {
 	return &TourRepository{
-		Collection:        db.Collection("tours"),
+		Collection:          db.Collection("tours"),
 		CountersCollection: db.Collection("counters"),
 	}
 }
@@ -57,6 +57,8 @@ func (r *TourRepository) CreateTour(tour *models.Tour) error {
 
 	_, err = r.Collection.InsertOne(ctx, tour)
 	if err != nil {
+		fmt.Printf("MongoDB InsertOne error: %v\n", err)
+
 		if mongo.IsDuplicateKeyError(err) {
 			return errors.New("a tour with this name already exists for this author")
 		}
@@ -103,3 +105,4 @@ func (r *TourRepository) GetTourByID(tourID int) (*models.Tour, error) {
 
 	return &tour, nil
 }
+
