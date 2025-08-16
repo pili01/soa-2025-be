@@ -1,91 +1,56 @@
 package handlers
 
 import (
-	"bytes"
 	"encoding/json"
 	"net/http"
+	"strconv"
 	"strings"
-	"os"
+
 	"tours-service/internal/models"
-	"tours-service/internal/repositories"
+	"tours-service/internal/services" 
+	"github.com/gorilla/mux"
 )
 
 type TourHandler struct {
-	tourRepo *repositories.TourRepository
-	keypointRepo *repositories.KeypointRepository
+	tourService *services.TourService
+	authService *services.AuthService
 }
 
-type TourWithKeypointsRequest struct {
-	Tour      models.Tour        `json:"tour"`
-	Keypoints []*models.Keypoint `json:"keypoints"`
-}
-
-func NewTourHandler(tourRepo *repositories.TourRepository, keypointRepo *repositories.KeypointRepository) *TourHandler {
+func NewTourHandler(tourService *services.TourService, authService *services.AuthService) *TourHandler {
 	return &TourHandler{
-		tourRepo:     tourRepo,
-		keypointRepo: keypointRepo,
+		tourService: tourService,
+		authService: authService,
 	}
 }
 
-type ValidationResponse struct {
-	UserID   int    `json:"userId"`
-	Username string `json:"username"`
-	Role     string `json:"role"`
-	IsValid  bool   `json:"isValid"`
-}
-
 func (h *TourHandler) CreateTour(w http.ResponseWriter, r *http.Request) {
-	var tour models.Tour
-	if err := json.NewDecoder(r.Body).Decode(&tour); err != nil {
+	var requestBody models.TourWithKeypointsRequest
+	if err := json.NewDecoder(r.Body).Decode(&requestBody); err != nil {
 		http.Error(w, "Invalid request body", http.StatusBadRequest)
 		return
 	}
 
-	authHeader := r.Header.Get("Authorization")
-	if authHeader == "" {
-		http.Error(w, "Authorization header is required", http.StatusUnauthorized)
-		return
-	}
-
-	validationURL := os.Getenv("STAKEHOLDERS_SERVICE_URL") + "/api/validateRole?role=Guide"
-	req, err := http.NewRequest("POST", validationURL, nil)
+	userID, err := h.authService.ValidateAndGetUserID(r, "Guide")
 	if err != nil {
-		http.Error(w, "Failed to create validation request", http.StatusInternalServerError)
-		return
-	}
-	req.Header.Set("Authorization", authHeader)
-
-	client := &http.Client{}
-	resp, err := client.Do(req)
-	if err != nil {
-		http.Error(w, "Failed to contact authentication service", http.StatusServiceUnavailable)
-		return
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode != http.StatusOK {
-		var errorBody bytes.Buffer
-		errorBody.ReadFrom(resp.Body)
-		http.Error(w, errorBody.String(), resp.StatusCode)
+		http.Error(w, err.Error(), http.StatusUnauthorized)
 		return
 	}
 
-	var validationResp ValidationResponse
-	if err := json.NewDecoder(resp.Body).Decode(&validationResp); err != nil {
-		http.Error(w, "Failed to decode validation response", http.StatusInternalServerError)
-		return
-	}
-	
-	tour.AuthorID = validationResp.UserID
+	tour := &requestBody.Tour
+	keypoints := requestBody.Keypoints
+
+	tour.AuthorID = userID
 	tour.Status = models.StatusDraft
 	tour.Price = 0.0
 
-	err = h.tourRepo.CreateTour(&tour)
+	err = h.tourService.CreateTour(tour, keypoints)
 	if err != nil {
 		if strings.Contains(err.Error(), "already exists") {
 			http.Error(w, err.Error(), http.StatusConflict)
+		} else if strings.Contains(err.Error(), "at least two keypoints") {
+			http.Error(w, err.Error(), http.StatusBadRequest)
 		} else {
-			http.Error(w, "Failed to create tour in database", http.StatusInternalServerError)
+			http.Error(w, "Failed to create tour: " + err.Error(), http.StatusInternalServerError)
 		}
 		return
 	}
@@ -96,42 +61,13 @@ func (h *TourHandler) CreateTour(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *TourHandler) GetToursByAuthor(w http.ResponseWriter, r *http.Request) {
-	authHeader := r.Header.Get("Authorization")
-	if authHeader == "" {
-		http.Error(w, "Authorization header is required", http.StatusUnauthorized)
-		return
-	}
-
-	validationURL := os.Getenv("STAKEHOLDERS_SERVICE_URL") + "/api/validateRole?role=Guide"
-	req, err := http.NewRequest("POST", validationURL, nil)
+	userID, err := h.authService.ValidateAndGetUserID(r, "Guide")
 	if err != nil {
-		http.Error(w, "Failed to create validation request", http.StatusInternalServerError)
-		return
-	}
-	req.Header.Set("Authorization", authHeader)
-
-	client := &http.Client{}
-	resp, err := client.Do(req)
-	if err != nil {
-		http.Error(w, "Failed to contact authentication service", http.StatusServiceUnavailable)
-		return
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode != http.StatusOK {
-		var errorBody bytes.Buffer
-		errorBody.ReadFrom(resp.Body)
-		http.Error(w, errorBody.String(), resp.StatusCode)
+		http.Error(w, err.Error(), http.StatusUnauthorized)
 		return
 	}
 
-	var validationResp ValidationResponse
-	if err := json.NewDecoder(resp.Body).Decode(&validationResp); err != nil {
-		http.Error(w, "Failed to decode validation response", http.StatusInternalServerError)
-		return
-	}
-
-	tours, err := h.tourRepo.GetToursByAuthorID(validationResp.UserID)
+	tours, err := h.tourService.GetToursByAuthorID(userID)
 	if err != nil {
 		http.Error(w, "Failed to retrieve tours from database", http.StatusInternalServerError)
 		return
@@ -142,68 +78,116 @@ func (h *TourHandler) GetToursByAuthor(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(tours)
 }
 
-func (h *TourHandler) CreateTourWithKeypoints(w http.ResponseWriter, r *http.Request) {
-	var requestBody TourWithKeypointsRequest
-	if err := json.NewDecoder(r.Body).Decode(&requestBody); err != nil {
-		http.Error(w, "Invalid request body", http.StatusBadRequest)
-		return
-	}
+func (h *TourHandler) GetTourByID(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	tourIDStr := vars["tourId"]
 
-	authHeader := r.Header.Get("Authorization")
-	if authHeader == "" {
-		http.Error(w, "Authorization header is required", http.StatusUnauthorized)
-		return
-	}
-
-	validationURL := os.Getenv("STAKEHOLDERS_SERVICE_URL") + "/api/validateRole?role=Guide"
-	req, err := http.NewRequest("POST", validationURL, nil)
+	tourID, err := strconv.Atoi(tourIDStr)
 	if err != nil {
-		http.Error(w, "Failed to create validation request", http.StatusInternalServerError)
+		http.Error(w, "Invalid tour ID", http.StatusBadRequest)
 		return
 	}
-	req.Header.Set("Authorization", authHeader)
 
-	client := &http.Client{}
-	resp, err := client.Do(req)
+	tour, err := h.tourService.GetTourByID(tourID)
 	if err != nil {
-		http.Error(w, "Failed to contact authentication service", http.StatusServiceUnavailable)
-		return
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode != http.StatusOK {
-		var errorBody bytes.Buffer
-		errorBody.ReadFrom(resp.Body)
-		http.Error(w, errorBody.String(), resp.StatusCode)
-		return
-	}
-
-	var validationResp ValidationResponse
-	if err := json.NewDecoder(resp.Body).Decode(&validationResp); err != nil {
-		http.Error(w, "Failed to decode validation response", http.StatusInternalServerError)
-		return
-	}
-	
-	tour := &requestBody.Tour
-	keypoints := requestBody.Keypoints
-
-	tour.AuthorID = validationResp.UserID
-	tour.Status = models.StatusDraft
-	tour.Price = 0.0
-
-	err = h.tourRepo.CreateTourWithKeypoints(tour, keypoints, h.keypointRepo)
-	if err != nil {
-		if strings.Contains(err.Error(), "already exists") {
-			http.Error(w, err.Error(), http.StatusConflict)
-		} else if strings.Contains(err.Error(), "at least two keypoints") {
-			http.Error(w, err.Error(), http.StatusBadRequest)
+		if strings.Contains(err.Error(), "not found") {
+			http.Error(w, "Tour not found", http.StatusNotFound)
 		} else {
-			http.Error(w, "Failed to create tour with keypoints", http.StatusInternalServerError)
+			http.Error(w, "Failed to retrieve tour", http.StatusInternalServerError)
 		}
 		return
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusCreated)
+	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(tour)
+}
+
+func (h *TourHandler) UpdateTour(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	tourIDStr := vars["tourId"]
+
+	tourID, err := strconv.Atoi(tourIDStr)
+	if err != nil {
+		http.Error(w, "Invalid tour ID", http.StatusBadRequest)
+		return
+	}
+
+	var tour models.Tour
+	if err := json.NewDecoder(r.Body).Decode(&tour); err != nil {
+		http.Error(w, "Invalid request body", http.StatusBadRequest)
+		return
+	}
+
+	userID, err := h.authService.ValidateAndGetUserID(r, "Guide")
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusUnauthorized)
+		return
+	}
+
+	existingTour, err := h.tourService.GetTourByID(tourID)
+	if err != nil {
+		http.Error(w, "Tour not found", http.StatusNotFound)
+		return
+	}
+	
+	if existingTour.AuthorID != userID {
+		http.Error(w, "Only tour author can modify a tour", http.StatusForbidden)
+		return
+	}
+
+	tour.ID = tourID
+	tour.AuthorID = existingTour.AuthorID
+	tour.Status = existingTour.Status
+	tour.Price = existingTour.Price
+
+	err = h.tourService.UpdateTour(&tour)
+	if err != nil {
+		http.Error(w, "Failed to update tour", http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(tour)
+}
+
+func (h *TourHandler) DeleteTour(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	tourIDStr := vars["tourId"]
+
+	tourID, err := strconv.Atoi(tourIDStr)
+	if err != nil {
+		http.Error(w, "Invalid tour ID", http.StatusBadRequest)
+		return
+	}
+
+	userID, err := h.authService.ValidateAndGetUserID(r, "Guide")
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusUnauthorized)
+		return
+	}
+
+	existingTour, err := h.tourService.GetTourByID(tourID)
+	if err != nil {
+		http.Error(w, "Tour not found", http.StatusNotFound)
+		return
+	}
+	
+	if existingTour.AuthorID != userID {
+		http.Error(w, "Only tour author can delete a tour", http.StatusForbidden)
+		return
+	}
+
+	err = h.tourService.DeleteTour(tourID)
+	if err != nil {
+		http.Error(w, "Failed to delete tour", http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(map[string]string{
+		"message": "Tour and its keypoints deleted successfully",
+	})
 }

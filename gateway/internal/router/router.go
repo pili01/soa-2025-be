@@ -77,10 +77,13 @@ func (r *Router) setupRoutes() {
         
         toursGroup := api.Group("/tours")
         {
-            toursGroup.POST("/create-tour-with-keypoints", r.handleServiceRequest("tours"))
             toursGroup.POST("/create", r.handleServiceRequest("tours"))
             toursGroup.GET("/my-tours", r.handleServiceRequest("tours"))
-            toursGroup.POST("/:tourId/addKeypoint", r.handleServiceRequest("tours"))
+            toursGroup.GET("/:tourId", r.handleServiceRequest("tours"))
+            toursGroup.PUT("/:tourId", r.handleServiceRequest("tours"))
+            toursGroup.DELETE("/:tourId", r.handleServiceRequest("tours"))
+            
+            toursGroup.POST("/:tourId/create-keypoint", r.handleServiceRequest("tours"))
             toursGroup.GET("/:tourId/keypoints", r.handleServiceRequest("tours"))
             toursGroup.GET("/keypoints/:keypointId", r.handleServiceRequest("tours"))
             toursGroup.PUT("/keypoints/:keypointId", r.handleServiceRequest("tours"))
@@ -103,35 +106,36 @@ func (r *Router) setupRoutes() {
 
 
 func (r *Router) handleServiceRequest(serviceName string) gin.HandlerFunc {
-    return func(c *gin.Context) {
-        serviceProxy, exists := r.serviceRegistry.GetService(serviceName)
-        if !exists {
-            log.Error().Str("service", serviceName).Msg("Service not found")
-            c.JSON(http.StatusServiceUnavailable, gin.H{
-                "error":   "Service not available",
-                "service": serviceName,
-            })
-            return
-        }
+	return func(c *gin.Context) {
+		serviceProxy, exists := r.serviceRegistry.GetService(serviceName)
+		if !exists {
+			log.Error().Str("service", serviceName).Msg("Service not found")
+			c.JSON(http.StatusServiceUnavailable, gin.H{
+				"error":   "Service not available",
+				"service": serviceName,
+			})
+			return
+		}
         
-        originalPath := c.Request.URL.Path
-        servicePrefix := "/api/" + serviceName
-        if strings.HasPrefix(originalPath, servicePrefix) {
-            newPath := strings.TrimPrefix(originalPath, servicePrefix)
-            if newPath == "" {
-                newPath = "/"
-            }
-            c.Request.URL.Path = newPath
-        }
-        
-        log.Debug().
-            Str("service", serviceName).
-            Str("original_path", originalPath).
-            Str("new_path", c.Request.URL.Path).
-            Msg("Routing request to service")
+		originalPath := c.Request.URL.Path
 
-        serviceProxy.ServeHTTP(c.Writer, c.Request)
-    }
+		servicePrefix := "/api/" + serviceName
+		newPath := strings.TrimPrefix(originalPath, servicePrefix)
+		if newPath == "" {
+			newPath = "/"
+		}
+		
+		finalPath := "/api" + newPath 
+		c.Request.URL.Path = finalPath
+
+		log.Debug().
+			Str("service", serviceName).
+			Str("original_path", originalPath).
+			Str("new_path", c.Request.URL.Path).
+			Msg("Routing request to service")
+
+		serviceProxy.ServeHTTP(c.Writer, c.Request)
+	}
 }
 
 
