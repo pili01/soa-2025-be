@@ -31,7 +31,7 @@ func main() {
 	tourRepo := repositories.NewTourRepository(toursDB)
 	keypointRepo := repositories.NewKeypointRepository(toursDB)
 	
-	tourHandler := handlers.NewTourHandler(tourRepo)
+	tourHandler := handlers.NewTourHandler(tourRepo, keypointRepo)
 	keypointHandler := handlers.NewKeypointHandler(keypointRepo, tourRepo)
 
 	router := mux.NewRouter()
@@ -39,6 +39,7 @@ func main() {
 	// Tour routes
 	router.HandleFunc("/create", tourHandler.CreateTour).Methods("POST")
 	router.HandleFunc("/my-tours", tourHandler.GetToursByAuthor).Methods("GET")
+	router.HandleFunc("/create-tour-with-keypoints", tourHandler.CreateTourWithKeypoints).Methods("POST")
 	
 	// Keypoint routes
 	router.HandleFunc("/{tourId}/addKeypoint", keypointHandler.CreateKeypoint).Methods("POST")

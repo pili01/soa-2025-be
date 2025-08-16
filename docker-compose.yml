@@ -133,6 +133,18 @@ services:
     restart: unless-stopped
     networks: [soa-network]
 
+  map-service:
+    build:
+      context: ./map-service
+      dockerfile: .Dockerfile
+    container_name: map-service
+    ports:
+      - "3002:3000"  
+    env_file:
+      - ./map-service/.env
+    restart: unless-stopped
+    networks: [soa-network]
+
 networks:
   soa-network:
     driver: bridge

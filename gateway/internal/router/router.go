@@ -77,6 +77,7 @@ func (r *Router) setupRoutes() {
         
         toursGroup := api.Group("/tours")
         {
+            toursGroup.POST("/create-tour-with-keypoints", r.handleServiceRequest("tours"))
             toursGroup.POST("/create", r.handleServiceRequest("tours"))
             toursGroup.GET("/my-tours", r.handleServiceRequest("tours"))
             toursGroup.POST("/:tourId/addKeypoint", r.handleServiceRequest("tours"))
