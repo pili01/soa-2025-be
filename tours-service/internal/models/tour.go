@@ -15,6 +15,11 @@ const (
     DifficultyHard   TourDifficulty = "Hard"
 )
 
+type DistanceAndDuration struct {
+    Distance float64 `bson:"distance" json:"distance"` // in meters
+    Duration float64 `bson:"duration" json:"duration"` // in seconds
+}
+
 type Tour struct {
 	ID int `bson:"_id,omitempty" json:"id"`
 	AuthorID int `bson:"authorId" json:"authorId"`
@@ -25,4 +30,7 @@ type Tour struct {
 	Status TourStatus `bson:"status" json:"status"` // Draft, Published, Archived
 	Price float64 `bson:"price" json:"price"`
 	Keypoints []Keypoint `bson:"keypoints,omitempty" json:"keypoints,omitempty"` // Lista keypoint-a
+	DrivingStats DistanceAndDuration `bson:"drivingStats,omitempty" json:"drivingStats,omitempty"`
+  WalkingStats DistanceAndDuration `bson:"walkingStats,omitempty" json:"walkingStats,omitempty"`
+  CyclingStats DistanceAndDuration `bson:"cyclingStats,omitempty" json:"cyclingStats,omitempty"`
 }

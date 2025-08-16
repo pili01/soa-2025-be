@@ -5,20 +5,21 @@ import (
 	"errors"
 	"fmt"
 	"time"
+
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
-	"tours-service/internal/models" 
+	"tours-service/internal/models"
 )
 
 type KeypointRepository struct {
-	Collection        *mongo.Collection
+	Collection         *mongo.Collection
 	CountersCollection *mongo.Collection
 }
 
 func NewKeypointRepository(db *mongo.Database) *KeypointRepository {
 	return &KeypointRepository{
-		Collection:        db.Collection("keypoints"),
+		Collection:         db.Collection("keypoints"),
 		CountersCollection: db.Collection("counters"),
 	}
 }
@@ -43,7 +44,7 @@ func (r *KeypointRepository) getNextSequenceValue(sequenceName string) (int, err
 func (r *KeypointRepository) CreateKeypoint(keypoint *models.Keypoint) error {
 	nextID, err := r.getNextSequenceValue("keypoint_id")
 	if err != nil {
-		return err 
+		return err
 	}
 	keypoint.ID = nextID
 
@@ -66,7 +67,7 @@ func (r *KeypointRepository) GetKeypointsByTourID(tourID int) ([]models.Keypoint
 	defer cancel()
 
 	filter := bson.M{"tourId": tourID}
-	opts := options.Find().SetSort(bson.M{"ordinal": 1}) 
+	opts := options.Find().SetSort(bson.M{"ordinal": 1})
 
 	cursor, err := r.Collection.Find(ctx, filter, opts)
 	if err != nil {
@@ -159,5 +160,3 @@ func (r *KeypointRepository) DeleteKeypointsByTourID(tourID int) error {
 
 	return nil
 }
-
-

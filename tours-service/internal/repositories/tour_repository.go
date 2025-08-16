@@ -8,7 +8,7 @@ import (
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
-	"tours-service/internal/models" 
+	"tours-service/internal/models"
 )
 
 type Counter struct {
@@ -17,13 +17,13 @@ type Counter struct {
 }
 
 type TourRepository struct {
-	Collection          *mongo.Collection
+	Collection         *mongo.Collection
 	CountersCollection *mongo.Collection
 }
 
 func NewTourRepository(db *mongo.Database) *TourRepository {
 	return &TourRepository{
-		Collection:          db.Collection("tours"),
+		Collection:         db.Collection("tours"),
 		CountersCollection: db.Collection("counters"),
 	}
 }
@@ -48,7 +48,7 @@ func (r *TourRepository) getNextSequenceValue(sequenceName string) (int, error) 
 func (r *TourRepository) CreateTour(tour *models.Tour) error {
 	nextID, err := r.getNextSequenceValue("tour_id")
 	if err != nil {
-		return err 
+		return err
 	}
 	tour.ID = nextID
 
@@ -57,8 +57,6 @@ func (r *TourRepository) CreateTour(tour *models.Tour) error {
 
 	_, err = r.Collection.InsertOne(ctx, tour)
 	if err != nil {
-		fmt.Printf("MongoDB InsertOne error: %v\n", err)
-
 		if mongo.IsDuplicateKeyError(err) {
 			return errors.New("a tour with this name already exists for this author")
 		}
@@ -106,3 +104,33 @@ func (r *TourRepository) GetTourByID(tourID int) (*models.Tour, error) {
 	return &tour, nil
 }
 
+func (r *TourRepository) UpdateTour(tour *models.Tour) error {
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	filter := bson.M{"_id": tour.ID}
+	update := bson.M{"$set": tour}
+
+	_, err := r.Collection.UpdateOne(ctx, filter, update)
+	if err != nil {
+		return fmt.Errorf("failed to update tour: %w", err)
+	}
+	return nil
+}
+
+func (r *TourRepository) DeleteTour(tourID int) error {
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	filter := bson.M{"_id": tourID}
+	result, err := r.Collection.DeleteOne(ctx, filter)
+	if err != nil {
+		return fmt.Errorf("failed to delete tour: %w", err)
+	}
+
+	if result.DeletedCount == 0 {
+		return errors.New("tour not found")
+	}
+
+	return nil
+}

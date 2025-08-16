@@ -47,11 +47,11 @@ func (h *UserHandler) RegisterUser(w http.ResponseWriter, r *http.Request) {
         return
     }
 
-    file, handler, err := r.FormFile("image") 
-    if err == nil { 
+    file, handler, err := r.FormFile("image")
+    if err == nil {
         defer file.Close()
 
-        photoURL, uploadErr := h.uploadToImageService(file, handler.Filename, req.Username)
+        photoURL, uploadErr := h.uploadToImageService(file, handler.Filename)
         if uploadErr != nil {
             http.Error(w, "Failed to upload image", http.StatusInternalServerError)
             return
@@ -382,51 +382,50 @@ func (h *UserHandler) GetUserFromToken(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
-func (h *UserHandler) uploadToImageService(file io.Reader, filename string, userId string) (string, error) {
-    var body bytes.Buffer
-    writer := multipart.NewWriter(&body)
+func (h *UserHandler) uploadToImageService(file io.Reader, filename string) (string, error) {
+	var body bytes.Buffer
+	writer := multipart.NewWriter(&body)
 
-    part, err := writer.CreateFormFile("image", filepath.Base(filename))
-    if err != nil {
-        return "", fmt.Errorf("failed to create form file: %w", err)
-    }
+	part, err := writer.CreateFormFile("image", filepath.Base(filename))
+	if err != nil {
+		return "", fmt.Errorf("failed to create form file: %w", err)
+	}
 
-    _, err = io.Copy(part, file)
-    if err != nil {
-        return "", fmt.Errorf("failed to copy file: %w", err)
-    }
+	_, err = io.Copy(part, file)
+	if err != nil {
+		return "", fmt.Errorf("failed to copy file: %w", err)
+	}
 
-    writer.WriteField("userId", userId)
-    writer.Close()
+	writer.Close()
 
-    req, err := http.NewRequest(
-        "POST",
-        os.Getenv("IMAGE_SERVICE_URL") + "/api/saveProfilePhoto",
-        &body,
-    )
-    if err != nil {
-        return "", fmt.Errorf("failed to create request: %w", err)
-    }
-    req.Header.Set("Content-Type", writer.FormDataContentType())
+	req, err := http.NewRequest(
+		"POST",
+		os.Getenv("IMAGE_SERVICE_URL")+"/api/save-image",
+		&body,
+	)
+	if err != nil {
+		return "", fmt.Errorf("failed to create request: %w", err)
+	}
+	req.Header.Set("Content-Type", writer.FormDataContentType())
 
-    client := &http.Client{}
-    resp, err := client.Do(req)
-    if err != nil {
-        return "", fmt.Errorf("failed to send request: %w", err)
-    }
-    defer resp.Body.Close()
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		return "", fmt.Errorf("failed to send request: %w", err)
+	}
+	defer resp.Body.Close()
 
-    if resp.StatusCode != http.StatusOK && resp.StatusCode != http.StatusCreated {
-        respBody, _ := io.ReadAll(resp.Body)
-        return "", fmt.Errorf("image service error: %s", string(respBody))
-    }
+	if resp.StatusCode != http.StatusOK && resp.StatusCode != http.StatusCreated {
+		respBody, _ := io.ReadAll(resp.Body)
+		return "", fmt.Errorf("image service error: %s", string(respBody))
+	}
 
-    var result struct {
-        PhotoURL string `json:"photoURL"`
-    }
-    if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
-        return "", fmt.Errorf("failed to decode response: %w", err)
-    }
+	var result struct {
+		PhotoURL string `json:"photoURL"`
+	}
+	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
+		return "", fmt.Errorf("failed to decode response: %w", err)
+	}
 
-    return result.PhotoURL, nil
+	return result.PhotoURL, nil
 }
