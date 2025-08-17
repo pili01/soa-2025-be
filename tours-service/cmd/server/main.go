@@ -32,12 +32,6 @@ func main() {
 
 	tourRepo := repositories.NewTourRepository(toursDB)
 	keypointRepo := repositories.NewKeypointRepository(toursDB)
-	reviewRepo := repositories.NewTourReviewRepository(toursDB)
-	
-	
-	tourHandler := handlers.NewTourHandler(tourRepo)
-	keypointHandler := handlers.NewKeypointHandler(keypointRepo, tourRepo)
-	reviewHandler := handlers.NewTourReviewHandler(reviewRepo, tourRepo)
 
 	mapService := services.NewMapService(os.Getenv("MAP_SERVICE_URL"))
 	tourService := services.NewTourService(tourRepo, keypointRepo, mapService)
@@ -49,10 +43,6 @@ func main() {
 
 	router := mux.NewRouter()
 	apiRouter := router.PathPrefix("/api").Subrouter()
-
-	// Review routes
-	router.HandleFunc("/api/reviews", reviewHandler.CreateTourReview).Methods("POST")
-	router.HandleFunc("/api/tours/{tourId}/reviews", reviewHandler.GetReviewsByTourID).Methods("GET")
 
 	// Tour routes
 	apiRouter.HandleFunc("/create", tourHandler.CreateTour).Methods("POST")
