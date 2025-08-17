@@ -2,35 +2,39 @@ const express = require('express');
 const multer = require('multer');
 const fs = require('fs');
 const path = require('path');
+const { v4: uuidv4 } = require('uuid');
 
 const router = express.Router();
 const uploadDir = path.join(__dirname, '../../uploads/ProfilePictures');
 const reviewUploadDir = path.join(__dirname, '../../uploads/TourReviewPictures');
+//const uploadDir = path.join(__dirname, '../../uploads/images');
 
 if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir, { recursive: true });
 if (!fs.existsSync(reviewUploadDir)) fs.mkdirSync(reviewUploadDir, { recursive: true });
 
 const upload = multer({ storage: multer.memoryStorage() });
 
-router.post('/saveProfilePhoto', upload.single('image'), (req, res) => {
+router.post('/save-image', upload.single('image'), (req, res) => {
     if (!req.file) {
         return res.status(400).json({ error: 'No file uploaded' });
     }
 
-    const userId = req.body.userId || 'unknown';
+    const uniqueId = uuidv4();
     const ext = path.extname(req.file.originalname);
-    const filename = `${userId}-${Date.now()}${ext}`;
+    const filename = `${uniqueId}-${Date.now()}${ext}`;
     const filePath = path.join(uploadDir, filename);
 
     fs.writeFileSync(filePath, req.file.buffer);
 
+    const baseURL = process.env.BASE_UPLOAD_URL;
+
     res.status(201).json({
         message: 'Image saved successfully',
-        photoURL: `http://localhost:3031/api/profilePhoto/${filename}`  
+        photoURL: `${baseURL}/api/img/${filename}`
     });
 });
 
-router.get('/profilePhoto/:filename', (req, res) => {
+router.get('/img/:filename', (req, res) => {
     const filename = req.params.filename;
     const filePath = path.join(uploadDir, filename);
 
