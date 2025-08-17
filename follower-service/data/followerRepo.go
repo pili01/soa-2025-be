@@ -256,3 +256,39 @@ func (pr *FollowerRepo) Unfollow(follower *User, unfollowed *User) (user string,
 	}
 	return unfollowedUser, nil
 }
+
+func (r *FollowerRepo) GetSuggested(userId int, limit int) (Users, error) {
+	ctx := context.Background()
+	session := r.driver.NewSession(ctx, neo4j.SessionConfig{DatabaseName: "neo4j"})
+	defer session.Close(ctx)
+
+	// ExecuteRead for read transactions (Read and queries)
+	userResults, err := session.ExecuteRead(ctx,
+		func(transaction neo4j.ManagedTransaction) (any, error) {
+			result, err := transaction.Run(ctx,
+				`MATCH (u:User {id:$userId})-[:FOLLOWS]->(follower)-[:FOLLOWS]->(suggested)
+					WHERE NOT exists { (u)-[:FOLLOWS]->(suggested) } AND u <> suggested
+					RETURN suggested.id AS id, suggested.username AS username ORDER BY rand() LIMIT $limit`,
+				map[string]any{"userId": userId, "limit": limit})
+			if err != nil {
+				return nil, err
+			}
+
+			var users Users
+			for result.Next(ctx) {
+				record := result.Record()
+				id, _ := record.Get("id")
+				username, _ := record.Get("username")
+				users = append(users, &User{
+					ID:       (int)(id.(int64)),
+					Username: username.(string),
+				})
+			}
+			return users, nil
+		})
+	if err != nil {
+		r.logger.Println("Error querying suggested users:", err)
+		return nil, err
+	}
+	return userResults.(Users), nil
+}

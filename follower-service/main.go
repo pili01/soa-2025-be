@@ -37,13 +37,14 @@ func main() {
 	followerHandler := handlers.NewFollowerHandler(logger, store)
 
 	router := mux.NewRouter()
+	api := router.PathPrefix("/api/follow").Subrouter()
 
-	router.HandleFunc("/api/myFollowers", followerHandler.GetFollowers).Methods("GET")
-	router.HandleFunc("/api/followedByMe", followerHandler.GetFollowed).Methods("GET")
-	// router.HandleFunc("/api/suggestedFollowers", followerHandler.GetSuggested).Methods("GET")
-	router.HandleFunc("/api/followedByMe/{id}", followerHandler.IsFollowedByMe).Methods("GET")
-	router.HandleFunc("/api/followUser", followerHandler.Follow).Methods("POST")
-	router.HandleFunc("/api/unfollowUser", followerHandler.Unfollow).Methods("POST")
+	api.HandleFunc("/myFollowers", followerHandler.GetFollowers).Methods("GET")
+	api.HandleFunc("/followedByMe", followerHandler.GetFollowed).Methods("GET")
+	api.HandleFunc("/suggestions", followerHandler.GetSuggested).Methods("GET")
+	api.HandleFunc("/followedByMe/{id}", followerHandler.IsFollowedByMe).Methods("GET")
+	api.HandleFunc("/followUser", followerHandler.Follow).Methods("POST")
+	api.HandleFunc("/unfollowUser", followerHandler.Unfollow).Methods("POST")
 
 	fmt.Printf("Server is running on port %s...\n", port)
 	log.Fatal(http.ListenAndServe(":"+port, router))

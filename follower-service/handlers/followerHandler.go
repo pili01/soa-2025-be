@@ -141,3 +141,24 @@ func (fh *FollowerHandler) Follow(rw http.ResponseWriter, h *http.Request) {
 		"message": fmt.Sprintf("Following user: %s", followedUser.Username),
 	})
 }
+
+func (fh *FollowerHandler) GetSuggested(rw http.ResponseWriter, h *http.Request) {
+	fmt.Println("Getting suggested followers...")
+	suggested, err := fh.repo.GetSuggested(3, 3)
+	if err != nil {
+		fh.logger.Print("Database exception: ", err)
+		http.Error(rw, "Database error", http.StatusInternalServerError)
+		return
+	}
+	if len(suggested) == 0 {
+		rw.WriteHeader(http.StatusNotFound)
+		rw.Write([]byte("No suggested followers found"))
+		return
+	}
+	err = suggested.ToJSON(rw)
+	if err != nil {
+		http.Error(rw, "Unable to convert to json", http.StatusInternalServerError)
+		fh.logger.Print("Unable to convert to json :", err)
+		return
+	}
+}
