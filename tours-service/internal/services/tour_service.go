@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"sort"
 	"tours-service/internal/models"
 	"tours-service/internal/repositories"
 )
@@ -114,4 +115,45 @@ func (s *TourService) UpdateTour(tour *models.Tour) error {
 	return nil
 }
 
+func (s *TourService) RecalculateTourLength(ctx context.Context, tourID int) error {
+	keypoints, err := s.KeypointRepo.GetKeypointsByTourID(tourID)
+	if err != nil {
+		return err
+	}
+
+	if len(keypoints) < 2 {
+		return s.TourRepo.UpdateTourLength(tourID,
+			models.DistanceAndDuration{},
+			models.DistanceAndDuration{},
+			models.DistanceAndDuration{})
+	}
+
+	sort.Slice(keypoints, func(i, j int) bool {
+		return keypoints[i].Ordinal < keypoints[j].Ordinal
+	})
+
+	var drivingTotal, walkingTotal, cyclingTotal models.DistanceAndDuration
+
+	for i := 0; i < len(keypoints)-1; i++ {
+		distMap, err := s.MapService.GetDistanceBetweenTwoKeypoints(ctx, keypoints[i], keypoints[i+1])
+		if err != nil {
+			return err
+		}
+
+		if stats, ok := distMap["driving-car"]; ok {
+			drivingTotal.Distance += stats.Distance
+			drivingTotal.Duration += stats.Duration
+		}
+		if stats, ok := distMap["foot-walking"]; ok {
+			walkingTotal.Distance += stats.Distance
+			walkingTotal.Duration += stats.Duration
+		}
+		if stats, ok := distMap["cycling-regular"]; ok {
+			cyclingTotal.Distance += stats.Distance
+			cyclingTotal.Duration += stats.Duration
+		}
+	}
+
+	return s.TourRepo.UpdateTourLength(tourID, drivingTotal, walkingTotal, cyclingTotal)
+}
 

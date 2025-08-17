@@ -69,6 +69,8 @@ func (h *KeypointHandler) CreateKeypoint(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
+	_ = h.tourService.RecalculateTourLength(r.Context(), keypoint.TourID)
+
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
 	json.NewEncoder(w).Encode(keypoint)
@@ -176,6 +178,8 @@ func (h *KeypointHandler) UpdateKeypoint(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
+	_ = h.tourService.RecalculateTourLength(r.Context(), keypointToUpdate.TourID)
+
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(keypointToUpdate)
@@ -223,6 +227,8 @@ func (h *KeypointHandler) DeleteKeypoint(w http.ResponseWriter, r *http.Request)
 		}
 		return
 	}
+
+	_ = h.tourService.RecalculateTourLength(r.Context(), existingKeypoint.TourID)
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)

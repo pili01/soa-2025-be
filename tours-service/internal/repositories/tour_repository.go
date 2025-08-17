@@ -134,3 +134,24 @@ func (r *TourRepository) DeleteTour(tourID int) error {
 
 	return nil
 }
+
+func (r *TourRepository) UpdateTourLength(tourID int, driving, walking, cycling models.DistanceAndDuration) error {
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	filter := bson.M{"_id": tourID}
+	update := bson.M{
+		"$set": bson.M{
+			"drivingStats": driving,
+			"walkingStats": walking,
+			"cyclingStats": cycling,
+		},
+	}
+
+	_, err := r.Collection.UpdateOne(ctx, filter, update)
+	if err != nil {
+		return fmt.Errorf("failed to update tour stats: %w", err)
+	}
+
+	return nil
+}
