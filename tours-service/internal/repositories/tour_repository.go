@@ -52,6 +52,10 @@ func (r *TourRepository) CreateTour(tour *models.Tour) error {
 	}
 	tour.ID = nextID
 
+	tour.Status = models.StatusDraft
+	now := time.Now()
+  tour.TimeDrafted = &now
+
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
@@ -180,8 +184,14 @@ func (r *TourRepository) PublishTour(tourID int) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
+	now := time.Now()
 	filter := bson.M{"_id": tourID}
-	update := bson.M{"$set": bson.M{"status": models.StatusPublished}}
+	update := bson.M{
+    "$set": bson.M{
+      "status": models.StatusPublished,
+      "timePublished": &now,
+    },
+  }
 
 	res, err := r.Collection.UpdateOne(ctx, filter, update)
 	if err != nil {
@@ -198,11 +208,17 @@ func (r *TourRepository) ArchiveTour(tourID int) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
+	now := time.Now()
 	filter := bson.M{
-		"_id":    tourID,
-		"status": models.StatusPublished,
-	}
-	update := bson.M{"$set": bson.M{"status": models.StatusArchived}}
+    "_id":    tourID,
+    "status": models.StatusPublished,
+  }
+  update := bson.M{
+    "$set": bson.M{
+      "status": models.StatusArchived,
+      "timeArchived": &now,
+    },
+  }
 
 	res, err := r.Collection.UpdateOne(ctx, filter, update)
 	if err != nil {
