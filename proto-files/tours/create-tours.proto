@@ -1,6 +1,6 @@
 syntax = "proto3";
 
-option go_package = "SOA-2025-BE/proto-files/tours";
+option go_package = "gateway/proto-files/tours";
 
 package tours;
 
@@ -31,5 +31,9 @@ message CreateTourResponse {
 }
 
 service TourService {
+    rpc CreateTour(CreateTourRequest) returns (CreateTourResponse);
+}
+
+service ToursService {
     rpc CreateTour(CreateTourRequest) returns (CreateTourResponse);
 }

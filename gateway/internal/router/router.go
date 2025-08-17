@@ -1,6 +1,7 @@
 package router
 
 import (
+    "fmt"
     "net/http"
     "strings"
 
@@ -128,21 +129,15 @@ func (r *Router) handleCreateTour() gin.HandlerFunc {
 			return
 		}
 
-
-		var reqBody pb.TourCreateRequest
+		var reqBody pb.CreateTourRequest
 		if err := c.ShouldBindJSON(&reqBody); err != nil {
 			log.Error().Err(err).Msg("Invalid request body for CreateTour")
 			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request body", "details": err.Error()})
 			return
 		}
 
-		reqBody.AuthorId = fmt.Sprintf("%v", userID)
-		
-		if reqBody.Price == 0 {
-			reqBody.Price = 0
-		}
-		
-		reqBody.Status = "DRAFT"
+		// Set the user_id from JWT context
+		reqBody.UserId = int32(userID.(float64))
 
 		resp, err := r.toursClient.CreateTour(c, &reqBody)
 		if err != nil {
