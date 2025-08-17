@@ -7,14 +7,14 @@ services:
     ports:
       - "5433:5432"
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      test: [ "CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB" ]
       interval: 5s
       timeout: 5s
       retries: 5
     volumes:
       - stakeholders-db-data:/var/lib/postgresql/data
       - ./stakeholders-service/db:/docker-entrypoint-initdb.d
-  
+
   stakeholders-service:
     build:
       context: ./stakeholders-service
@@ -39,7 +39,7 @@ services:
     ports:
       - "5434:5432"
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      test: [ "CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB" ]
       interval: 5s
       timeout: 5s
       retries: 5
@@ -59,7 +59,7 @@ services:
         condition: service_healthy
     environment:
       DATABASE_URL: "postgresql://postgres:super@blog-db:5432/blogSOA?schema=public"
-    command: ["node", "src/app.js"]
+    command: [ "node", "src/app.js" ]
 
   tours-db:
     image: mongo:8.0
@@ -69,14 +69,14 @@ services:
     ports:
       - "5435:27017"
     healthcheck:
-      test: ["CMD-SHELL", "mongosh --eval 'db.adminCommand(\"ping\")'"]
+      test: [ "CMD-SHELL", "mongosh --eval 'db.adminCommand(\"ping\")'" ]
       interval: 5s
       timeout: 5s
       retries: 5
     volumes:
       - tours-db-data:/data/db
       - ./tours-service/db/init.js:/docker-entrypoint-initdb.d/init.js:ro
-      
+
   tours-service:
     build:
       context: ./tours-service
@@ -89,23 +89,54 @@ services:
         condition: service_healthy
     env_file:
       - ./tours-service/.env
-  
+
   image-service:
     build:
       context: ./image-service
-      dockerfile: .Dockerfile   
+      dockerfile: .Dockerfile
     container_name: image-service
     ports:
-      - "3031:3000"  
+      - "3031:3000"
     env_file:
       - ./image-service/.env
     volumes:
       - ./image-service/uploads:/usr/src/app/uploads
     restart: unless-stopped
 
+  follower-service:
+    build:
+      context: ./follower-service
+      dockerfile: .Dockerfile
+    restart: always
+    container_name: "follower-server"
+    hostname: "follower-server"
+    ports:
+      - "8082:8080"
+    env_file:
+      - ./follower-service/.env
+    depends_on:
+      neo4j:
+        condition: service_healthy
+
+  neo4j:
+    image: neo4j:4.4
+    restart: always
+    ports:
+      - "7687:7687"
+    healthcheck:
+      test: [ "CMD-SHELL", "echo RETURN 1 | cypher-shell -a bolt://neo4j:7687 -u neo4j -p supersuper || exit 1" ]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    env_file:
+      - ./follower-service/.env
+    volumes:
+      - neo4j-data:/data
+
 volumes:
   stakeholders-db-data:
   blog-db-data:
   tours-db-data:
+  neo4j-data:
 
-  
+
