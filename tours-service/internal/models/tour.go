@@ -1,5 +1,7 @@
 package models
 
+import "time"
+
 type TourStatus string
 type TourDifficulty string
 
@@ -15,6 +17,11 @@ const (
     DifficultyHard   TourDifficulty = "Hard"
 )
 
+type DistanceAndDuration struct {
+    Distance float64 `bson:"distance" json:"distance"` // in meters
+    Duration float64 `bson:"duration" json:"duration"` // in seconds
+}
+
 type Tour struct {
 	ID int `bson:"_id,omitempty" json:"id"`
 	AuthorID int `bson:"authorId" json:"authorId"`
@@ -24,5 +31,14 @@ type Tour struct {
 	Tags []string `bson:"tags" json:"tags"`
 	Status TourStatus `bson:"status" json:"status"` // Draft, Published, Archived
 	Price float64 `bson:"price" json:"price"`
-	Keypoints []Keypoint `bson:"keypoints,omitempty" json:"keypoints,omitempty"` // Lista keypoint-a
+
+	// Distance and duration statistics
+	DrivingStats DistanceAndDuration `bson:"drivingStats,omitempty" json:"drivingStats,omitempty"`
+  WalkingStats DistanceAndDuration `bson:"walkingStats,omitempty" json:"walkingStats,omitempty"`
+  CyclingStats DistanceAndDuration `bson:"cyclingStats,omitempty" json:"cyclingStats,omitempty"`
+
+	// Timestamps
+	TimePublished *time.Time `bson:"timePublished,omitempty" json:"timePublished,omitempty"`
+	TimeArchived *time.Time `bson:"timeArchived,omitempty" json:"timeArchived,omitempty"`
+	TimeDrafted *time.Time `bson:"timeDrafted,omitempty" json:"timeDrafted,omitempty"`
 }

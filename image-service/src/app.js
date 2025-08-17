@@ -5,7 +5,7 @@ require('dotenv').config();
 const app = express();
 app.use(express.json());
 
-app.use('/ProfilePictures', express.static('uploads/ProfilePictures'));
+app.use('/pic', express.static('uploads/pictures'));
 app.use('/api', imageRoutes);
 
 const PORT = process.env.PORT || 3000;
