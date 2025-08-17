@@ -145,10 +145,6 @@ services:
     restart: unless-stopped
     networks: [soa-network]
 
-networks:
-  soa-network:
-    driver: bridge
-
   follower-service:
     build:
       context: ./follower-service
@@ -163,6 +159,7 @@ networks:
     depends_on:
       neo4j:
         condition: service_healthy
+    networks: [soa-network]
 
   neo4j:
     image: neo4j:4.4
@@ -178,6 +175,11 @@ networks:
       - ./follower-service/.env
     volumes:
       - neo4j-data:/data
+    networks: [soa-network]
+
+networks:
+  soa-network:
+    driver: bridge
 
 volumes:
   stakeholders-db-data:
