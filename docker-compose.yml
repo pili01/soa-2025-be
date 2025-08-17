@@ -2,8 +2,8 @@ services:
   # Gateway service - main entry point
   gateway:
     build:
-      context: ./gateway
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: ./gateway/Dockerfile
     container_name: soa-gateway
     ports:
       - "8080:8080"  # Main gateway port
@@ -12,7 +12,7 @@ services:
       - BLOG_SERVICE_URL=http://blog-service:3000
       - IMAGE_SERVICE_URL=http://image-service:3000
       - STAKEHOLDERS_SERVICE_URL=http://stakeholders-service:8080
-      - TOURS_SERVICE_URL=http://tours-service:8080
+      - TOURS_SERVICE_URL=tours-service:50051
       - JWT_SECRET=U1aZEDdXc8r+07B7Ez9eBl8Yec3H1oD06rGecIuhV4k=
     depends_on:
       - blog-service
@@ -107,8 +107,8 @@ services:
       
   tours-service:
     build:
-      context: ./tours-service
-      dockerfile: .Dockerfile
+      context: .
+      dockerfile: ./tours-service/.Dockerfile
     container_name: tours-service
     ports:
       - "8082:8080"  

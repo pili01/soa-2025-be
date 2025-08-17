@@ -8,7 +8,7 @@ import (
     "gateway/internal/handlers"
     "gateway/internal/middleware"
     "gateway/internal/proxy"
-
+    pb "gateway/proto-files/tours"
     "github.com/gin-gonic/gin"
     "github.com/rs/zerolog/log"
 )
@@ -18,9 +18,10 @@ type Router struct {
     config          *config.Config
     serviceRegistry *proxy.ServiceRegistry
     healthHandler   *handlers.HealthHandler
+    toursClient     pb.ToursServiceClient 
 }
 
-func NewRouter(cfg *config.Config) (*Router, error) {
+func NewRouter(cfg *config.Config, toursClient pb.ToursServiceClient) (*Router, error) {
     if cfg.Server.Port == "8080" {
         gin.SetMode(gin.ReleaseMode)
     }
@@ -37,6 +38,7 @@ func NewRouter(cfg *config.Config) (*Router, error) {
         config:          cfg,
         serviceRegistry: serviceRegistry,
         healthHandler:   handlers.NewHealthHandler(),
+        toursClient:     toursClient, 
     }
 
     router.setupMiddleware()
@@ -77,7 +79,7 @@ func (r *Router) setupRoutes() {
         
         toursGroup := api.Group("/tours")
         {
-            toursGroup.POST("/create", r.handleServiceRequest("tours"))
+            toursGroup.POST("/create", r.handleCreateTour()) // Adapted to use gRPC client
             toursGroup.GET("/my-tours", r.handleServiceRequest("tours"))
             toursGroup.GET("/:tourId", r.handleServiceRequest("tours"))
             toursGroup.GET("/:tourId/get-published", r.handleServiceRequest("tours"))
@@ -109,6 +111,49 @@ func (r *Router) setupRoutes() {
     })
 }
 
+func (r *Router) handleCreateTour() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		userID, userIDExists := c.Get("user_id")
+		userRole, userRoleExists := c.Get("role")
+
+		if !userIDExists || !userRoleExists {
+			log.Error().Msg("User data missing in context after JWT authentication")
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Authentication data not found"})
+			return
+		}
+
+		if userRole != "GUIDE" {
+			log.Warn().Str("user_id", fmt.Sprintf("%v", userID)).Msg("Unauthorized access: user is not a GUIDE")
+			c.JSON(http.StatusForbidden, gin.H{"error": "Only guides can create tours"})
+			return
+		}
+
+
+		var reqBody pb.TourCreateRequest
+		if err := c.ShouldBindJSON(&reqBody); err != nil {
+			log.Error().Err(err).Msg("Invalid request body for CreateTour")
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request body", "details": err.Error()})
+			return
+		}
+
+		reqBody.AuthorId = fmt.Sprintf("%v", userID)
+		
+		if reqBody.Price == 0 {
+			reqBody.Price = 0
+		}
+		
+		reqBody.Status = "DRAFT"
+
+		resp, err := r.toursClient.CreateTour(c, &reqBody)
+		if err != nil {
+			log.Error().Err(err).Msg("Failed to call CreateTour via gRPC")
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create tour"})
+			return
+		}
+
+		c.JSON(http.StatusOK, resp)
+	}
+}
 
 func (r *Router) handleServiceRequest(serviceName string) gin.HandlerFunc {
 	return func(c *gin.Context) {
