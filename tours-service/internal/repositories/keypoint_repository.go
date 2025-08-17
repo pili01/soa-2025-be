@@ -160,3 +160,24 @@ func (r *KeypointRepository) DeleteKeypointsByTourID(tourID int) error {
 
 	return nil
 }
+
+func (r *KeypointRepository) GetFirstKeypointByTourID(tourID int) (*models.Keypoint, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	filter := bson.M{
+		"tourId":  tourID,
+		"ordinal": 1,
+	}
+
+	var keypoint models.Keypoint
+	err := r.Collection.FindOne(ctx, filter).Decode(&keypoint)
+	if err != nil {
+		if err == mongo.ErrNoDocuments {
+			return nil, errors.New("first keypoint not found for this tour")
+		}
+		return nil, fmt.Errorf("failed to find first keypoint: %w", err)
+	}
+
+	return &keypoint, nil
+}
