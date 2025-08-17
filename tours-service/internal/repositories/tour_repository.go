@@ -66,6 +66,26 @@ func (r *TourRepository) CreateTour(tour *models.Tour) error {
 	return nil
 }
 
+func (r *TourRepository) GetPublishedTours() ([]models.Tour, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	filter := bson.M{"status": models.StatusPublished}
+
+	cursor, err := r.Collection.Find(ctx, filter)
+	if err != nil {
+		return nil, fmt.Errorf("failed to find published tours: %w", err)
+	}
+	defer cursor.Close(ctx)
+
+	var tours []models.Tour
+	if err = cursor.All(ctx, &tours); err != nil {
+		return nil, fmt.Errorf("failed to decode tours: %w", err)
+	}
+
+	return tours, nil
+}
+
 func (r *TourRepository) GetToursByAuthorID(authorID int) ([]models.Tour, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
@@ -151,6 +171,82 @@ func (r *TourRepository) UpdateTourLength(tourID int, driving, walking, cycling 
 	_, err := r.Collection.UpdateOne(ctx, filter, update)
 	if err != nil {
 		return fmt.Errorf("failed to update tour stats: %w", err)
+	}
+
+	return nil
+}
+
+func (r *TourRepository) PublishTour(tourID int) error {
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	filter := bson.M{"_id": tourID}
+	update := bson.M{"$set": bson.M{"status": models.StatusPublished}}
+
+	res, err := r.Collection.UpdateOne(ctx, filter, update)
+	if err != nil {
+		return fmt.Errorf("failed to publish tour: %w", err)
+	}
+	if res.MatchedCount == 0 {
+		return errors.New("tour not found")
+	}
+
+	return nil
+}
+
+func (r *TourRepository) ArchiveTour(tourID int) error {
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	filter := bson.M{
+		"_id":    tourID,
+		"status": models.StatusPublished,
+	}
+	update := bson.M{"$set": bson.M{"status": models.StatusArchived}}
+
+	res, err := r.Collection.UpdateOne(ctx, filter, update)
+	if err != nil {
+		return fmt.Errorf("failed to archive tour: %w", err)
+	}
+
+	if res.MatchedCount == 0 {
+		var tour models.Tour
+		err = r.Collection.FindOne(ctx, bson.M{"_id": tourID}).Decode(&tour)
+		if err == mongo.ErrNoDocuments {
+			return errors.New("tour not found")
+		}
+		if err != nil {
+			return fmt.Errorf("failed to check tour status: %w", err)
+		}
+
+		if tour.Status != models.StatusPublished {
+			return errors.New("tour can only be archived if its status is 'Published'")
+		}
+		return errors.New("tour not found")
+
+	}
+
+	return nil
+}
+
+func (r *TourRepository) SetTourPrice(tourID int, newPrice float64, authorID int) error {
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	filter := bson.M{
+		"_id":      tourID,
+		"authorId": authorID,
+	}
+
+	update := bson.M{"$set": bson.M{"price": newPrice}}
+
+	res, err := r.Collection.UpdateOne(ctx, filter, update)
+	if err != nil {
+		return fmt.Errorf("failed to update tour price: %w", err)
+	}
+
+	if res.MatchedCount == 0 {
+		return errors.New("tour not found or you are not the author")
 	}
 
 	return nil

@@ -21,3 +21,8 @@ type CreateKeypointRequest struct {
 	Longitude   float64 `json:"longitude"`
 	Ordinal     int     `json:"ordinal"`
 }
+
+type TourWithFirstKeypoint struct {
+	Tour
+	FirstKeypoint Keypoint `json:"firstKeypoint"`
+}

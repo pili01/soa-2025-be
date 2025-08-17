@@ -80,8 +80,13 @@ func (r *Router) setupRoutes() {
             toursGroup.POST("/create", r.handleServiceRequest("tours"))
             toursGroup.GET("/my-tours", r.handleServiceRequest("tours"))
             toursGroup.GET("/:tourId", r.handleServiceRequest("tours"))
+            toursGroup.GET("/:tourId/get-published", r.handleServiceRequest("tours"))
             toursGroup.PUT("/:tourId", r.handleServiceRequest("tours"))
             toursGroup.DELETE("/:tourId", r.handleServiceRequest("tours"))
+            toursGroup.POST("/:tourId/publish", r.handleServiceRequest("tours"))
+            toursGroup.POST("/:tourId/archive", r.handleServiceRequest("tours"))
+            toursGroup.POST("/:tourId/set-price", r.handleServiceRequest("tours"))
+            
             
             toursGroup.POST("/:tourId/create-keypoint", r.handleServiceRequest("tours"))
             toursGroup.GET("/:tourId/keypoints", r.handleServiceRequest("tours"))

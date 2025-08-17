@@ -50,6 +50,10 @@ func main() {
 	apiRouter.HandleFunc("/{tourId}", tourHandler.GetTourByID).Methods("GET")
 	apiRouter.HandleFunc("/{tourId}", tourHandler.UpdateTour).Methods("PUT")
 	apiRouter.HandleFunc("/{tourId}", tourHandler.DeleteTour).Methods("DELETE")
+	apiRouter.HandleFunc("/{tourId}/publish", tourHandler.PublishTour).Methods("POST")
+	apiRouter.HandleFunc("/{tourId}/archive", tourHandler.ArchiveTour).Methods("POST")
+	apiRouter.HandleFunc("/{tourId}/set-price", tourHandler.SetTourPrice).Methods("POST")
+	apiRouter.HandleFunc("/get-published", tourHandler.GetPublishedToursWithFirstKeypoint).Methods("GET")
 
 	// Keypoint routes
 	apiRouter.HandleFunc("/{tourId}/create-keypoint", keypointHandler.CreateKeypoint).Methods("POST")

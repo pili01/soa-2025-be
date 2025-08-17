@@ -91,6 +91,31 @@ func (s *TourService) DeleteTour(tourID int) error {
 	return nil
 }
 
+func (s *TourService) GetPublishedToursWithFirstKeypoint() ([]models.TourWithFirstKeypoint, error) {
+	tours, err := s.TourRepo.GetPublishedTours()
+	if err != nil {
+		return nil, fmt.Errorf("service failed to get published tours: %w", err)
+	}
+
+	result := make([]models.TourWithFirstKeypoint, 0, len(tours))
+
+	for _, tour := range tours {
+		firstKeypoint, err := s.KeypointRepo.GetFirstKeypointByTourID(tour.ID)
+		if err != nil {
+			return nil, fmt.Errorf("service failed to get first keypoint for tour %d: %w", tour.ID, err)
+		}
+
+		combinedTour := models.TourWithFirstKeypoint{
+			Tour:          tour,
+			FirstKeypoint: *firstKeypoint,
+		}
+
+		result = append(result, combinedTour)
+	}
+
+	return result, nil
+}
+
 func (s *TourService) GetToursByAuthorID(authorID int) ([]models.Tour, error) {
 	tours, err := s.TourRepo.GetToursByAuthorID(authorID)
 	if err != nil {
@@ -157,3 +182,26 @@ func (s *TourService) RecalculateTourLength(ctx context.Context, tourID int) err
 	return s.TourRepo.UpdateTourLength(tourID, drivingTotal, walkingTotal, cyclingTotal)
 }
 
+func (s *TourService) PublishTour(tourID int) error {
+	err := s.TourRepo.PublishTour(tourID)
+	if err != nil {
+		return fmt.Errorf("service failed to publish tour: %w", err)
+	}
+	return nil
+}
+
+func (s *TourService) ArchiveTour(tourID int) error {
+	err := s.TourRepo.ArchiveTour(tourID)
+	if err != nil {
+		return fmt.Errorf("service failed to archive tour: %w", err)
+	}
+	return nil
+}
+
+func (s *TourService) SetTourPrice(tourID int, newPrice float64, authorID int) error {
+	err := s.TourRepo.SetTourPrice(tourID, newPrice, authorID)
+	if err != nil {
+		return fmt.Errorf("service failed to set tour price: %w", err)
+	}
+	return nil
+}
