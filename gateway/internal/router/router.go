@@ -80,6 +80,7 @@ func (r *Router) setupRoutes() {
 		api.Any("/stakeholders/*path", r.handleStakeholdersProxyRequest())
 		api.Any("/stakeholder/*path", r.handleStakeholdersProxyRequest())
 
+		api.Any("/follow/*path", r.handleFollowerProxyRequest())
 		toursGroup := api.Group("/tours")
 		{
 			toursGroup.POST("/create", r.handleCreateTour())  // Adapted to use gRPC client
@@ -274,6 +275,20 @@ func (r *Router) handleBlogProxyRequest() gin.HandlerFunc {
 	}
 }
 
+func (r *Router) handleFollowerProxyRequest() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		serviceProxy, exists := r.serviceRegistry.GetService("follower")
+		if !exists {
+			log.Error().Str("service", "follower").Msg("Follower service not found")
+			c.JSON(http.StatusServiceUnavailable, gin.H{"error": "Follower service not available"})
+			c.Abort()
+			return
+		}
+
+		serviceProxy.ServeHTTP(c.Writer, c.Request)
+	}
+}
+
 func (r *Router) handleStakeholdersProxyRequest() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		serviceProxy, exists := r.serviceRegistry.GetService("stakeholders")
@@ -319,6 +334,7 @@ func registerServices(registry *proxy.ServiceRegistry, services config.ServicesC
 		"image":        services.Image,
 		"stakeholders": services.Stakeholders,
 		"tours":        services.Tours,
+		"follower":     services.Follower,
 	}
 
 	for name, url := range serviceMappings {

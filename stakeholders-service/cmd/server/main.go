@@ -3,13 +3,16 @@ package main
 import (
 	"fmt"
 	"log"
+	"net"
 	"net/http"
 	"os"
 	"stakeholders-service/db"
 	"stakeholders-service/internal/handlers"
 	repository "stakeholders-service/internal/repositories"
+	proto "stakeholders-service/proto"
 
 	"github.com/gorilla/mux"
+	"google.golang.org/grpc"
 )
 
 func main() {
@@ -32,6 +35,19 @@ func main() {
 
 	router.HandleFunc("/api/admin/users", userHandler.GetAllUsers).Methods("GET")
 	router.HandleFunc("/api/admin/users/block", userHandler.BlockUser).Methods("PUT")
+
+	go func() {
+		lis, err := net.Listen("tcp", ":8000")
+		if err != nil {
+			log.Fatalf("Failed to listen: %v", err)
+		}
+		grpcServer := grpc.NewServer()
+		proto.RegisterStakeholdersServiceServer(grpcServer, userHandler)
+		fmt.Println("gRPC server started on port 8000")
+		if err := grpcServer.Serve(lis); err != nil {
+			log.Fatalf("Failed to serve gRPC: %v", err)
+		}
+	}()
 
 	port := os.Getenv("PORT")
 	if port == "" {

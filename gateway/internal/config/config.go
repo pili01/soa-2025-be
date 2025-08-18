@@ -25,6 +25,7 @@ type ServicesConfig struct {
 	Image        string
 	Stakeholders string
 	Tours        string
+	Follower     string
 }
 
 type AuthConfig struct {
@@ -63,6 +64,7 @@ func Load() (*Config, error) {
 			Blog:         getEnv("BLOG_SERVICE_URL", "http://blog-service:3000"),
 			Image:        getEnv("IMAGE_SERVICE_URL", "http://image-service:3001"),
 			Stakeholders: getEnv("STAKEHOLDERS_SERVICE_URL", "http://stakeholders-service:8081"),
+			Follower:     getEnv("FOLLOWER_SERVICE_URL", "http://follower-service:8083"),
 			Tours:        getEnv("TOURS_SERVICE_URL", "tours-service:50051"),
 		},
 		Auth: AuthConfig{
