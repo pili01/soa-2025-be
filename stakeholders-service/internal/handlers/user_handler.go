@@ -1,24 +1,29 @@
 package handlers
 
 import (
+	"bytes"
+	"context"
 	"database/sql"
 	"encoding/json"
-	"fmt" 
-	"os"
+	"fmt"
 	"io"
 	"mime/multipart"
-	"bytes"
 	"net/http"
-	"strings"
+	"os"
 	"path/filepath"
-	"golang.org/x/crypto/bcrypt"
 	"stakeholders-service/internal/models"
-	"stakeholders-service/internal/repositories"
+	repository "stakeholders-service/internal/repositories"
 	"stakeholders-service/internal/utils"
+	proto "stakeholders-service/proto"
+	"strings"
+
+	"golang.org/x/crypto/bcrypt"
+	"google.golang.org/grpc/metadata"
 )
 
 type UserHandler struct {
 	userRepo *repository.UserRepository
+	proto.UnimplementedStakeholdersServiceServer
 }
 
 func NewUserHandler(userRepo *repository.UserRepository) *UserHandler {
@@ -26,68 +31,68 @@ func NewUserHandler(userRepo *repository.UserRepository) *UserHandler {
 }
 
 func (h *UserHandler) RegisterUser(w http.ResponseWriter, r *http.Request) {
-    err := r.ParseMultipartForm(10 << 20)
-    if err != nil {
-        http.Error(w, "Error parsing form data", http.StatusBadRequest)
-        return
-    }
+	err := r.ParseMultipartForm(10 << 20)
+	if err != nil {
+		http.Error(w, "Error parsing form data", http.StatusBadRequest)
+		return
+	}
 
-    var req models.RegisterUserRequest
-    req.Username = r.FormValue("username")
-    req.Password = r.FormValue("password")
-    req.Email = r.FormValue("email")
-    req.Role = r.FormValue("role")
-    req.Name = r.FormValue("name")
-    req.Surname = r.FormValue("surname")
-    req.Biography = r.FormValue("biography")
-    req.Moto = r.FormValue("moto")
+	var req models.RegisterUserRequest
+	req.Username = r.FormValue("username")
+	req.Password = r.FormValue("password")
+	req.Email = r.FormValue("email")
+	req.Role = r.FormValue("role")
+	req.Name = r.FormValue("name")
+	req.Surname = r.FormValue("surname")
+	req.Biography = r.FormValue("biography")
+	req.Moto = r.FormValue("moto")
 
-    if req.Role != "Guide" && req.Role != "Tourist" {
-        http.Error(w, "Invalid role. Role must be 'Guide' or 'Tourist'.", http.StatusBadRequest)
-        return
-    }
+	if req.Role != "Guide" && req.Role != "Tourist" {
+		http.Error(w, "Invalid role. Role must be 'Guide' or 'Tourist'.", http.StatusBadRequest)
+		return
+	}
 
-    file, handler, err := r.FormFile("image")
-    if err == nil {
-        defer file.Close()
+	file, handler, err := r.FormFile("image")
+	if err == nil {
+		defer file.Close()
 
-        photoURL, uploadErr := h.uploadToImageService(file, handler.Filename)
-        if uploadErr != nil {
-            http.Error(w, "Failed to upload image", http.StatusInternalServerError)
-            return
-        }
-        req.PhotoURL = photoURL
-    } else if err != http.ErrMissingFile {
-        http.Error(w, "Error reading file", http.StatusBadRequest)
-        return
-    }
+		photoURL, uploadErr := h.uploadToImageService(file, handler.Filename)
+		if uploadErr != nil {
+			http.Error(w, "Failed to upload image", http.StatusInternalServerError)
+			return
+		}
+		req.PhotoURL = photoURL
+	} else if err != http.ErrMissingFile {
+		http.Error(w, "Error reading file", http.StatusBadRequest)
+		return
+	}
 
-    newUser := models.User{
-        Username:  req.Username,
-        Password:  req.Password,
-        Email:     req.Email,
-        Role:      req.Role,
-        Name:      req.Name,
-        Surname:   req.Surname,
-        Biography: req.Biography,
-        Moto:      req.Moto,
-        PhotoURL:  req.PhotoURL,
-        IsBlocked: false,
-    }
+	newUser := models.User{
+		Username:  req.Username,
+		Password:  req.Password,
+		Email:     req.Email,
+		Role:      req.Role,
+		Name:      req.Name,
+		Surname:   req.Surname,
+		Biography: req.Biography,
+		Moto:      req.Moto,
+		PhotoURL:  req.PhotoURL,
+		IsBlocked: false,
+	}
 
-    err = h.userRepo.CreateUser(&newUser)
-    if err != nil {
-        if strings.Contains(err.Error(), "already exists") {
-            http.Error(w, err.Error(), http.StatusConflict)
-        } else {
-            http.Error(w, "Failed to create user", http.StatusInternalServerError)
-        }
-        return
-    }
+	err = h.userRepo.CreateUser(&newUser)
+	if err != nil {
+		if strings.Contains(err.Error(), "already exists") {
+			http.Error(w, err.Error(), http.StatusConflict)
+		} else {
+			http.Error(w, "Failed to create user", http.StatusInternalServerError)
+		}
+		return
+	}
 
-    w.Header().Set("Content-Type", "application/json")
-    w.WriteHeader(http.StatusCreated)
-    json.NewEncoder(w).Encode(map[string]string{"message": "User registered successfully!"})
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusCreated)
+	json.NewEncoder(w).Encode(map[string]string{"message": "User registered successfully!"})
 }
 
 func (h *UserHandler) LoginUser(w http.ResponseWriter, r *http.Request) {
@@ -380,6 +385,41 @@ func (h *UserHandler) GetUserFromToken(w http.ResponseWriter, r *http.Request) {
 		"username": claims.Username,
 		"role":     claims.Role,
 	})
+}
+
+func (h *UserHandler) GetMyInfo(ctx context.Context, req *proto.GetMyInfoRequest) (*proto.GetMyInfoResponse, error) {
+	md, ok := metadata.FromIncomingContext(ctx)
+	if !ok {
+		fmt.Println("failed to retrieve metadata from context")
+		return nil, fmt.Errorf("failed to retrieve metadata")
+	}
+
+	if authHeaders, exists := md["authorization"]; exists && len(authHeaders) > 0 {
+		tokenParts := strings.Split(authHeaders[0], " ")
+		if len(tokenParts) != 2 || tokenParts[0] != "Bearer" {
+			return nil, fmt.Errorf("authorization header format must be Bearer {token}")
+		}
+		tokenString := tokenParts[1]
+
+		claims, err := utils.ValidateToken(tokenString)
+		if err != nil {
+			return nil, fmt.Errorf("invalid or expired token")
+		}
+
+		// Retrieve user information from the database
+		user, err := h.userRepo.GetUserByID(claims.ID)
+		if err != nil {
+			return nil, fmt.Errorf("failed to retrieve user data: %w", err)
+		}
+
+		return &proto.GetMyInfoResponse{
+			Id:       (int64)(user.ID),
+			Username: user.Username,
+			Role:     user.Role,
+		}, nil
+	} else {
+		return nil, fmt.Errorf("authorization header is missing")
+	}
 }
 
 func (h *UserHandler) uploadToImageService(file io.Reader, filename string) (string, error) {

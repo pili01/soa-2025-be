@@ -1,0 +1,17 @@
+syntax = "proto3";
+
+option go_package = "proto/stakeholders";
+
+service StakeholdersService {
+    rpc GetMyInfo(GetMyInfoRequest) returns (GetMyInfoResponse) {}
+}
+
+message GetMyInfoRequest {
+    string user_id = 1;
+}
+
+message GetMyInfoResponse {
+    int64 id = 1;
+    string username = 2;
+    string role = 3;
+}
