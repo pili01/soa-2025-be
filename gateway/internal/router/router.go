@@ -209,31 +209,36 @@ func (r *Router) handleGetMyTours() gin.HandlerFunc {
 
 func (r *Router) handleServiceRequest(serviceName string) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		serviceProxy, exists := r.serviceRegistry.GetService(serviceName)
-		if !exists {
-			log.Error().Str("service", serviceName).Msg("Service not found")
-			c.JSON(http.StatusServiceUnavailable, gin.H{
-				"error":   "Service not available",
-				"service": serviceName,
-			})
-			return
+		var serviceProxy *proxy.ServiceProxy
+		var exists bool
+
+		if serviceName == "tours" {
+			serviceProxy, _ = proxy.NewServiceProxy(r.config.Services.ToursAPI)
+		} else {
+			serviceProxy, exists = r.serviceRegistry.GetService(serviceName)
+			if !exists {
+				log.Error().Str("service", serviceName).Msg("Service not found")
+				c.JSON(http.StatusServiceUnavailable, gin.H{
+					"error":   "Service not available",
+					"service": serviceName,
+				})
+				return
+			}
 		}
 
 		originalPath := c.Request.URL.Path
-
 		servicePrefix := "/api/" + serviceName
 		newPath := strings.TrimPrefix(originalPath, servicePrefix)
 		if newPath == "" {
 			newPath = "/"
 		}
-
 		finalPath := "/api" + newPath
 		c.Request.URL.Path = finalPath
 
 		log.Debug().
 			Str("service", serviceName).
 			Str("original_path", originalPath).
-			Str("new_path", c.Request.URL.Path).
+			Str("new_path", finalPath).
 			Msg("Routing request to service")
 
 		serviceProxy.ServeHTTP(c.Writer, c.Request)
