@@ -285,7 +285,7 @@ func (x *DistanceAndDuration) GetDuration() float64 {
 	return 0
 }
 
-type CreateTourResponse struct {
+type TourResponse struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Id            int32                  `protobuf:"varint,1,opt,name=id,proto3" json:"id,omitempty"`
 	AuthorId      int32                  `protobuf:"varint,2,opt,name=author_id,json=authorId,proto3" json:"author_id,omitempty"`
@@ -305,20 +305,20 @@ type CreateTourResponse struct {
 	sizeCache     protoimpl.SizeCache
 }
 
-func (x *CreateTourResponse) Reset() {
-	*x = CreateTourResponse{}
+func (x *TourResponse) Reset() {
+	*x = TourResponse{}
 	mi := &file_tours_proto_msgTypes[4]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
 
-func (x *CreateTourResponse) String() string {
+func (x *TourResponse) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*CreateTourResponse) ProtoMessage() {}
+func (*TourResponse) ProtoMessage() {}
 
-func (x *CreateTourResponse) ProtoReflect() protoreflect.Message {
+func (x *TourResponse) ProtoReflect() protoreflect.Message {
 	mi := &file_tours_proto_msgTypes[4]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -330,107 +330,195 @@ func (x *CreateTourResponse) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use CreateTourResponse.ProtoReflect.Descriptor instead.
-func (*CreateTourResponse) Descriptor() ([]byte, []int) {
+// Deprecated: Use TourResponse.ProtoReflect.Descriptor instead.
+func (*TourResponse) Descriptor() ([]byte, []int) {
 	return file_tours_proto_rawDescGZIP(), []int{4}
 }
 
-func (x *CreateTourResponse) GetId() int32 {
+func (x *TourResponse) GetId() int32 {
 	if x != nil {
 		return x.Id
 	}
 	return 0
 }
 
-func (x *CreateTourResponse) GetAuthorId() int32 {
+func (x *TourResponse) GetAuthorId() int32 {
 	if x != nil {
 		return x.AuthorId
 	}
 	return 0
 }
 
-func (x *CreateTourResponse) GetName() string {
+func (x *TourResponse) GetName() string {
 	if x != nil {
 		return x.Name
 	}
 	return ""
 }
 
-func (x *CreateTourResponse) GetDescription() string {
+func (x *TourResponse) GetDescription() string {
 	if x != nil {
 		return x.Description
 	}
 	return ""
 }
 
-func (x *CreateTourResponse) GetDifficulty() string {
+func (x *TourResponse) GetDifficulty() string {
 	if x != nil {
 		return x.Difficulty
 	}
 	return ""
 }
 
-func (x *CreateTourResponse) GetTags() []string {
+func (x *TourResponse) GetTags() []string {
 	if x != nil {
 		return x.Tags
 	}
 	return nil
 }
 
-func (x *CreateTourResponse) GetStatus() string {
+func (x *TourResponse) GetStatus() string {
 	if x != nil {
 		return x.Status
 	}
 	return ""
 }
 
-func (x *CreateTourResponse) GetPrice() float64 {
+func (x *TourResponse) GetPrice() float64 {
 	if x != nil {
 		return x.Price
 	}
 	return 0
 }
 
-func (x *CreateTourResponse) GetDrivingStats() *DistanceAndDuration {
+func (x *TourResponse) GetDrivingStats() *DistanceAndDuration {
 	if x != nil {
 		return x.DrivingStats
 	}
 	return nil
 }
 
-func (x *CreateTourResponse) GetWalkingStats() *DistanceAndDuration {
+func (x *TourResponse) GetWalkingStats() *DistanceAndDuration {
 	if x != nil {
 		return x.WalkingStats
 	}
 	return nil
 }
 
-func (x *CreateTourResponse) GetCyclingStats() *DistanceAndDuration {
+func (x *TourResponse) GetCyclingStats() *DistanceAndDuration {
 	if x != nil {
 		return x.CyclingStats
 	}
 	return nil
 }
 
-func (x *CreateTourResponse) GetTimePublished() string {
+func (x *TourResponse) GetTimePublished() string {
 	if x != nil {
 		return x.TimePublished
 	}
 	return ""
 }
 
-func (x *CreateTourResponse) GetTimeArchived() string {
+func (x *TourResponse) GetTimeArchived() string {
 	if x != nil {
 		return x.TimeArchived
 	}
 	return ""
 }
 
-func (x *CreateTourResponse) GetTimeDrafted() string {
+func (x *TourResponse) GetTimeDrafted() string {
 	if x != nil {
 		return x.TimeDrafted
 	}
 	return ""
+}
+
+type GetToursByAuthorIDRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	UserId        int32                  `protobuf:"varint,1,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *GetToursByAuthorIDRequest) Reset() {
+	*x = GetToursByAuthorIDRequest{}
+	mi := &file_tours_proto_msgTypes[5]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *GetToursByAuthorIDRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GetToursByAuthorIDRequest) ProtoMessage() {}
+
+func (x *GetToursByAuthorIDRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_tours_proto_msgTypes[5]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use GetToursByAuthorIDRequest.ProtoReflect.Descriptor instead.
+func (*GetToursByAuthorIDRequest) Descriptor() ([]byte, []int) {
+	return file_tours_proto_rawDescGZIP(), []int{5}
+}
+
+func (x *GetToursByAuthorIDRequest) GetUserId() int32 {
+	if x != nil {
+		return x.UserId
+	}
+	return 0
+}
+
+type GetToursByAuthorIDResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Tours         []*TourResponse        `protobuf:"bytes,1,rep,name=tours,proto3" json:"tours,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *GetToursByAuthorIDResponse) Reset() {
+	*x = GetToursByAuthorIDResponse{}
+	mi := &file_tours_proto_msgTypes[6]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *GetToursByAuthorIDResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GetToursByAuthorIDResponse) ProtoMessage() {}
+
+func (x *GetToursByAuthorIDResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_tours_proto_msgTypes[6]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use GetToursByAuthorIDResponse.ProtoReflect.Descriptor instead.
+func (*GetToursByAuthorIDResponse) Descriptor() ([]byte, []int) {
+	return file_tours_proto_rawDescGZIP(), []int{6}
+}
+
+func (x *GetToursByAuthorIDResponse) GetTours() []*TourResponse {
+	if x != nil {
+		return x.Tours
+	}
+	return nil
 }
 
 var File_tours_proto protoreflect.FileDescriptor
@@ -458,8 +546,8 @@ const file_tours_proto_rawDesc = "" +
 	"\auser_id\x18\x03 \x01(\x05R\x06userId\"M\n" +
 	"\x13DistanceAndDuration\x12\x1a\n" +
 	"\bdistance\x18\x01 \x01(\x01R\bdistance\x12\x1a\n" +
-	"\bduration\x18\x02 \x01(\x01R\bduration\"\x8b\x04\n" +
-	"\x12CreateTourResponse\x12\x0e\n" +
+	"\bduration\x18\x02 \x01(\x01R\bduration\"\x85\x04\n" +
+	"\fTourResponse\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\x05R\x02id\x12\x1b\n" +
 	"\tauthor_id\x18\x02 \x01(\x05R\bauthorId\x12\x12\n" +
 	"\x04name\x18\x03 \x01(\tR\x04name\x12 \n" +
@@ -476,10 +564,15 @@ const file_tours_proto_rawDesc = "" +
 	"\rcycling_stats\x18\v \x01(\v2\x1a.tours.DistanceAndDurationR\fcyclingStats\x12%\n" +
 	"\x0etime_published\x18\f \x01(\tR\rtimePublished\x12#\n" +
 	"\rtime_archived\x18\r \x01(\tR\ftimeArchived\x12!\n" +
-	"\ftime_drafted\x18\x0e \x01(\tR\vtimeDrafted2P\n" +
-	"\vTourService\x12A\n" +
+	"\ftime_drafted\x18\x0e \x01(\tR\vtimeDrafted\"4\n" +
+	"\x19GetToursByAuthorIDRequest\x12\x17\n" +
+	"\auser_id\x18\x01 \x01(\x05R\x06userId\"G\n" +
+	"\x1aGetToursByAuthorIDResponse\x12)\n" +
+	"\x05tours\x18\x01 \x03(\v2\x13.tours.TourResponseR\x05tours2\xa5\x01\n" +
+	"\vTourService\x12;\n" +
 	"\n" +
-	"CreateTour\x12\x18.tours.CreateTourRequest\x1a\x19.tours.CreateTourResponseB\x10Z\x0eproto/compiledb\x06proto3"
+	"CreateTour\x12\x18.tours.CreateTourRequest\x1a\x13.tours.TourResponse\x12Y\n" +
+	"\x12GetToursByAuthorID\x12 .tours.GetToursByAuthorIDRequest\x1a!.tours.GetToursByAuthorIDResponseB\x10Z\x0eproto/compiledb\x06proto3"
 
 var (
 	file_tours_proto_rawDescOnce sync.Once
@@ -493,27 +586,32 @@ func file_tours_proto_rawDescGZIP() []byte {
 	return file_tours_proto_rawDescData
 }
 
-var file_tours_proto_msgTypes = make([]protoimpl.MessageInfo, 5)
+var file_tours_proto_msgTypes = make([]protoimpl.MessageInfo, 7)
 var file_tours_proto_goTypes = []any{
-	(*TourForCreation)(nil),     // 0: tours.TourForCreation
-	(*KeypointForCreation)(nil), // 1: tours.KeypointForCreation
-	(*CreateTourRequest)(nil),   // 2: tours.CreateTourRequest
-	(*DistanceAndDuration)(nil), // 3: tours.DistanceAndDuration
-	(*CreateTourResponse)(nil),  // 4: tours.CreateTourResponse
+	(*TourForCreation)(nil),            // 0: tours.TourForCreation
+	(*KeypointForCreation)(nil),        // 1: tours.KeypointForCreation
+	(*CreateTourRequest)(nil),          // 2: tours.CreateTourRequest
+	(*DistanceAndDuration)(nil),        // 3: tours.DistanceAndDuration
+	(*TourResponse)(nil),               // 4: tours.TourResponse
+	(*GetToursByAuthorIDRequest)(nil),  // 5: tours.GetToursByAuthorIDRequest
+	(*GetToursByAuthorIDResponse)(nil), // 6: tours.GetToursByAuthorIDResponse
 }
 var file_tours_proto_depIdxs = []int32{
 	0, // 0: tours.CreateTourRequest.tour:type_name -> tours.TourForCreation
 	1, // 1: tours.CreateTourRequest.keypoints:type_name -> tours.KeypointForCreation
-	3, // 2: tours.CreateTourResponse.driving_stats:type_name -> tours.DistanceAndDuration
-	3, // 3: tours.CreateTourResponse.walking_stats:type_name -> tours.DistanceAndDuration
-	3, // 4: tours.CreateTourResponse.cycling_stats:type_name -> tours.DistanceAndDuration
-	2, // 5: tours.TourService.CreateTour:input_type -> tours.CreateTourRequest
-	4, // 6: tours.TourService.CreateTour:output_type -> tours.CreateTourResponse
-	6, // [6:7] is the sub-list for method output_type
-	5, // [5:6] is the sub-list for method input_type
-	5, // [5:5] is the sub-list for extension type_name
-	5, // [5:5] is the sub-list for extension extendee
-	0, // [0:5] is the sub-list for field type_name
+	3, // 2: tours.TourResponse.driving_stats:type_name -> tours.DistanceAndDuration
+	3, // 3: tours.TourResponse.walking_stats:type_name -> tours.DistanceAndDuration
+	3, // 4: tours.TourResponse.cycling_stats:type_name -> tours.DistanceAndDuration
+	4, // 5: tours.GetToursByAuthorIDResponse.tours:type_name -> tours.TourResponse
+	2, // 6: tours.TourService.CreateTour:input_type -> tours.CreateTourRequest
+	5, // 7: tours.TourService.GetToursByAuthorID:input_type -> tours.GetToursByAuthorIDRequest
+	4, // 8: tours.TourService.CreateTour:output_type -> tours.TourResponse
+	6, // 9: tours.TourService.GetToursByAuthorID:output_type -> tours.GetToursByAuthorIDResponse
+	8, // [8:10] is the sub-list for method output_type
+	6, // [6:8] is the sub-list for method input_type
+	6, // [6:6] is the sub-list for extension type_name
+	6, // [6:6] is the sub-list for extension extendee
+	0, // [0:6] is the sub-list for field type_name
 }
 
 func init() { file_tours_proto_init() }
@@ -527,7 +625,7 @@ func file_tours_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_tours_proto_rawDesc), len(file_tours_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   5,
+			NumMessages:   7,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

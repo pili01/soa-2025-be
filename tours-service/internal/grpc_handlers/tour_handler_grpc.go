@@ -23,8 +23,7 @@ func NewTourGRPCServer(tourService *services.TourService) *TourGRPCServer {
 	}
 }
 
-func (s *TourGRPCServer) CreateTour(ctx context.Context, req *pb.CreateTourRequest) (*pb.CreateTourResponse, error) {
-	// Add nil checks for the Tour and Keypoints
+func (s *TourGRPCServer) CreateTour(ctx context.Context, req *pb.CreateTourRequest) (*pb.TourResponse, error) {
 	if req.Tour == nil {
 		return nil, status.Error(codes.InvalidArgument, "Tour data is required.")
 	}
@@ -65,8 +64,7 @@ func (s *TourGRPCServer) CreateTour(ctx context.Context, req *pb.CreateTourReque
 		return nil, status.Error(codes.Internal, "Failed to create tour: "+err.Error())
 	}
 
-	// This is the new part: returning the full tour details
-	res := &pb.CreateTourResponse{
+	res := &pb.TourResponse{
 		Id:           int32(tour.ID),
 		AuthorId:     int32(tour.AuthorID),
 		Name:         tour.Name,
@@ -91,4 +89,44 @@ func (s *TourGRPCServer) CreateTour(ctx context.Context, req *pb.CreateTourReque
 	}
 
 	return res, nil
+}
+
+func (s *TourGRPCServer) GetToursByAuthorID(ctx context.Context, req *pb.GetToursByAuthorIDRequest) (*pb.GetToursByAuthorIDResponse, error) {
+	tours, err := s.tourService.GetToursByAuthorID(int(req.UserId))
+	if err != nil {
+		return nil, status.Error(codes.Internal, "Failed to retrieve tours: "+err.Error())
+	}
+
+	var pbTours []*pb.TourResponse
+	for _, tour := range tours {
+		pbTour := &pb.TourResponse{
+			Id:           int32(tour.ID),
+			AuthorId:     int32(tour.AuthorID),
+			Name:         tour.Name,
+			Description:  tour.Description,
+			Difficulty:   string(tour.Difficulty),
+			Tags:         tour.Tags,
+			Status:       string(tour.Status),
+			Price:        tour.Price,
+			DrivingStats: &pb.DistanceAndDuration{Distance: tour.DrivingStats.Distance, Duration: tour.DrivingStats.Duration},
+			WalkingStats: &pb.DistanceAndDuration{Distance: tour.WalkingStats.Distance, Duration: tour.WalkingStats.Duration},
+			CyclingStats: &pb.DistanceAndDuration{Distance: tour.CyclingStats.Distance, Duration: tour.CyclingStats.Duration},
+		}
+
+		if tour.TimePublished != nil {
+			pbTour.TimePublished = tour.TimePublished.Format(time.RFC3339)
+		}
+		if tour.TimeArchived != nil {
+			pbTour.TimeArchived = tour.TimeArchived.Format(time.RFC3339)
+		}
+		if tour.TimeDrafted != nil {
+			pbTour.TimeDrafted = tour.TimeDrafted.Format(time.RFC3339)
+		}
+
+		pbTours = append(pbTours, pbTour)
+	}
+
+	return &pb.GetToursByAuthorIDResponse{
+		Tours: pbTours,
+	}, nil
 }

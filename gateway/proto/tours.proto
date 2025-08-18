@@ -31,7 +31,7 @@ message DistanceAndDuration {
   double duration = 2;
 }
 
-message CreateTourResponse {
+message TourResponse {
   int32 id = 1;
   int32 author_id = 2;
   string name = 3;
@@ -50,6 +50,15 @@ message CreateTourResponse {
   string time_drafted = 14;
 }
 
+message GetToursByAuthorIDRequest {
+  int32 user_id = 1;
+}
+
+message GetToursByAuthorIDResponse {
+  repeated TourResponse tours = 1;
+}
+
 service TourService {
-    rpc CreateTour(CreateTourRequest) returns (CreateTourResponse);
+    rpc CreateTour(CreateTourRequest) returns (TourResponse);
+    rpc GetToursByAuthorID(GetToursByAuthorIDRequest) returns (GetToursByAuthorIDResponse);
 }
