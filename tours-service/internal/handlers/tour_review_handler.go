@@ -103,7 +103,7 @@ func (h *TourReviewHandler) CreateTourReview(w http.ResponseWriter, r *http.Requ
 		return
 	}
 
-	var validationResp ValidationResponse
+	var validationResp models.ValidationResponse
 	if err := json.NewDecoder(resp.Body).Decode(&validationResp); err != nil {
 		http.Error(w, "Failed to decode validation response", http.StatusInternalServerError)
 		return
