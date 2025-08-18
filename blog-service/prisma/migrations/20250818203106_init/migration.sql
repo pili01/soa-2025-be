@@ -1,6 +1,7 @@
 -- CreateTable
 CREATE TABLE "public"."blogs" (
     "id" SERIAL NOT NULL,
+    "userId" INTEGER NOT NULL,
     "title" TEXT NOT NULL,
     "content" TEXT NOT NULL,
     "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -27,6 +28,9 @@ CREATE TABLE "public"."blog_comments" (
 
     CONSTRAINT "blog_comments_pkey" PRIMARY KEY ("id")
 );
+
+-- CreateIndex
+CREATE INDEX "blogs_userId_idx" ON "public"."blogs"("userId");
 
 -- CreateIndex
 CREATE INDEX "blog_likes_blogId_idx" ON "public"."blog_likes"("blogId");

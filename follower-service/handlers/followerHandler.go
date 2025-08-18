@@ -105,7 +105,7 @@ func (fh *FollowerHandler) IsFollowedByMe(rw http.ResponseWriter, h *http.Reques
 		return
 	}
 	if len(followers) == 0 {
-		rw.WriteHeader(http.StatusNotFound)
+		rw.WriteHeader(http.StatusOK)
 		rw.Write([]byte(`{"value": false}`))
 		return
 	}
