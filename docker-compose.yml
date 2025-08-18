@@ -2,8 +2,8 @@ services:
   # Gateway service - main entry point
   gateway:
     build:
-      context: .
-      dockerfile: ./gateway/Dockerfile
+      context: ./gateway
+      dockerfile: Dockerfile
     container_name: soa-gateway
     ports:
       - "8080:8080"  # Main gateway port
@@ -107,9 +107,11 @@ services:
       
   tours-service:
     build:
-      context: .
-      dockerfile: ./tours-service/.Dockerfile
+      context: ./tours-service
+      dockerfile: .Dockerfile
     container_name: tours-service
+    expose:
+    - "50051" # gRPC port only inside the network
     ports:
       - "8082:8080"  
     depends_on:

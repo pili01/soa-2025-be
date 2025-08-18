@@ -1,6 +1,6 @@
 syntax = "proto3";
 
-option go_package = "gateway/proto-files/tours";
+option go_package = "proto/compiled";
 
 package tours;
 
@@ -26,14 +26,30 @@ message CreateTourRequest {
     int32 user_id = 3;
 }
 
+message DistanceAndDuration {
+  double distance = 1;
+  double duration = 2;
+}
+
 message CreateTourResponse {
-    int32 id = 1;
+  int32 id = 1;
+  int32 author_id = 2;
+  string name = 3;
+  string description = 4;
+  string difficulty = 5;
+  repeated string tags = 6;
+  string status = 7;
+  double price = 8;
+
+  DistanceAndDuration driving_stats = 9;
+  DistanceAndDuration walking_stats = 10;
+  DistanceAndDuration cycling_stats = 11;
+  
+  string time_published = 12;
+  string time_archived = 13;
+  string time_drafted = 14;
 }
 
 service TourService {
-    rpc CreateTour(CreateTourRequest) returns (CreateTourResponse);
-}
-
-service ToursService {
     rpc CreateTour(CreateTourRequest) returns (CreateTourResponse);
 }

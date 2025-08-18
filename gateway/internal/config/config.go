@@ -63,7 +63,7 @@ func Load() (*Config, error) {
 			Blog:         getEnv("BLOG_SERVICE_URL", "http://blog-service:3000"),
 			Image:        getEnv("IMAGE_SERVICE_URL", "http://image-service:3001"),
 			Stakeholders: getEnv("STAKEHOLDERS_SERVICE_URL", "http://stakeholders-service:8081"),
-			Tours: getEnv("TOURS_SERVICE_URL", "tours-service:50051"),
+			Tours:        getEnv("TOURS_SERVICE_URL", "tours-service:50051"),
 		},
 		Auth: AuthConfig{
 			JWTSecret: getEnv("JWT_SECRET", "your-secret-key"),
@@ -88,5 +88,3 @@ func getEnvAsInt(key string, defaultValue int) int {
 	}
 	return defaultValue
 }
-
-

@@ -2,18 +2,19 @@ package main
 
 import (
 	"context"
+	"gateway/internal/config"
+	"gateway/internal/router"
 	"net/http"
 	"os"
 	"os/signal"
 	"syscall"
 	"time"
-	"gateway/internal/config"
-	"gateway/internal/router"
 
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
-	
-	pb "gateway/proto-files/tours"
+
+	pb "gateway/proto/compiled"
+
 	"google.golang.org/grpc"
 )
 
@@ -24,22 +25,22 @@ func main() {
 
 	log.Info().Msg("Starting SOA Gateway...")
 
-	// KONFIGURACIJA 
+	// KONFIGURACIJA
 	cfg, err := config.Load()
 	if err != nil {
 		log.Fatal().Err(err).Msg("Failed to load configuration")
 	}
 
-	// GRPC klijent 
+	// GRPC klijent
 	conn, err := grpc.Dial(cfg.Services.Tours, grpc.WithInsecure())
 	if err != nil {
 		log.Fatal().Err(err).Msg("Failed to connect to tours service")
 	}
 	defer conn.Close()
 
-	toursClient := pb.NewToursServiceClient(conn)
+	toursClient := pb.NewTourServiceClient(conn)
 
-	// RUTER 
+	// RUTER
 	r, err := router.NewRouter(cfg, toursClient)
 	if err != nil {
 		log.Fatal().Err(err).Msg("Failed to create router")
