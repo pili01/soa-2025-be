@@ -166,3 +166,17 @@ func (s *TourGRPCServer) GetTourByID(ctx context.Context, req *pb.GetTourByIDReq
 
 	return res, nil
 }
+
+func (s *TourGRPCServer) SetTourPrice(ctx context.Context, req *pb.SetTourPriceRequest) (*pb.SetTourPriceResponse, error) {
+	err := s.tourService.SetTourPrice(int(req.TourId), req.Price, int(req.UserId))
+	if err != nil {
+		if strings.Contains(err.Error(), "not found or you are not the author") {
+			return nil, status.Error(codes.PermissionDenied, "Tour not found or you are not the author")
+		}
+		return nil, status.Error(codes.Internal, "Failed to update tour price: "+err.Error())
+	}
+
+	return &pb.SetTourPriceResponse{
+		Message: "Tour price updated successfully",
+	}, nil
+}
