@@ -85,7 +85,7 @@ func (r *Router) setupRoutes() {
 		{
 			toursGroup.POST("/create", r.handleCreateTour())  // Adapted to use gRPC client
 			toursGroup.GET("/my-tours", r.handleGetMyTours()) // Adapted to use gRPC client
-			toursGroup.GET("/:tourId", r.handleServiceRequest("tours"))
+			toursGroup.GET("/:tourId", r.handleGetTourByID()) // Adapted to use gRPC client
 			toursGroup.GET("/:tourId/get-published", r.handleServiceRequest("tours"))
 			toursGroup.PUT("/:tourId", r.handleServiceRequest("tours"))
 			toursGroup.DELETE("/:tourId", r.handleServiceRequest("tours"))
@@ -200,6 +200,31 @@ func (r *Router) handleGetMyTours() gin.HandlerFunc {
 		if err != nil {
 			log.Error().Err(err).Msg("Failed to call GetToursByAuthorID via gRPC")
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to retrieve tours"})
+			return
+		}
+
+		c.JSON(http.StatusOK, resp)
+	}
+}
+
+func (r *Router) handleGetTourByID() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		tourIDStr := c.Param("tourId")
+		tourID, err := strconv.Atoi(tourIDStr)
+		if err != nil {
+			log.Error().Err(err).Msg("Invalid tour ID format")
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid tour ID format"})
+			return
+		}
+
+		req := &pb.GetTourByIDRequest{
+			TourId: int32(tourID),
+		}
+
+		resp, err := r.toursClient.GetTourByID(c, req)
+		if err != nil {
+			log.Error().Err(err).Msg("Failed to call GetTourByID via gRPC")
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to retrieve tour"})
 			return
 		}
 

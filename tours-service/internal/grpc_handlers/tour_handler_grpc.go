@@ -130,3 +130,39 @@ func (s *TourGRPCServer) GetToursByAuthorID(ctx context.Context, req *pb.GetTour
 		Tours: pbTours,
 	}, nil
 }
+
+func (s *TourGRPCServer) GetTourByID(ctx context.Context, req *pb.GetTourByIDRequest) (*pb.TourResponse, error) {
+	tour, err := s.tourService.GetTourByID(int(req.TourId))
+	if err != nil {
+		if strings.Contains(err.Error(), "not found") {
+			return nil, status.Error(codes.NotFound, "Tour not found")
+		}
+		return nil, status.Error(codes.Internal, "Failed to retrieve tour: "+err.Error())
+	}
+
+	res := &pb.TourResponse{
+		Id:           int32(tour.ID),
+		AuthorId:     int32(tour.AuthorID),
+		Name:         tour.Name,
+		Description:  tour.Description,
+		Difficulty:   string(tour.Difficulty),
+		Tags:         tour.Tags,
+		Status:       string(tour.Status),
+		Price:        tour.Price,
+		DrivingStats: &pb.DistanceAndDuration{Distance: tour.DrivingStats.Distance, Duration: tour.DrivingStats.Duration},
+		WalkingStats: &pb.DistanceAndDuration{Distance: tour.WalkingStats.Distance, Duration: tour.WalkingStats.Duration},
+		CyclingStats: &pb.DistanceAndDuration{Distance: tour.CyclingStats.Distance, Duration: tour.CyclingStats.Duration},
+	}
+
+	if tour.TimePublished != nil {
+		res.TimePublished = tour.TimePublished.Format(time.RFC3339)
+	}
+	if tour.TimeArchived != nil {
+		res.TimeArchived = tour.TimeArchived.Format(time.RFC3339)
+	}
+	if tour.TimeDrafted != nil {
+		res.TimeDrafted = tour.TimeDrafted.Format(time.RFC3339)
+	}
+
+	return res, nil
+}
