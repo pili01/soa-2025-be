@@ -13,7 +13,8 @@ services:
       - IMAGE_SERVICE_URL=http://image-service:3000
       - STAKEHOLDERS_SERVICE_URL=http://stakeholders-service:8080
       - FOLLOWER_SERVICE_URL=http://follower-service:8080
-      - TOURS_SERVICE_URL=tours-service:50051
+      - TOURS_SERVICE_GRPC_URL=tours-service:50051   # RPC
+      - TOURS_SERVICE_API_URL=http://tours-service:8080   # REST
       - JWT_SECRET=U1aZEDdXc8r+07B7Ez9eBl8Yec3H1oD06rGecIuhV4k=
     depends_on:
       - blog-service

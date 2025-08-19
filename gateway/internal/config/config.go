@@ -25,6 +25,7 @@ type ServicesConfig struct {
 	Image        string
 	Stakeholders string
 	Tours        string
+	ToursAPI     string
 	Follower     string
 }
 
@@ -65,7 +66,8 @@ func Load() (*Config, error) {
 			Image:        getEnv("IMAGE_SERVICE_URL", "http://image-service:3001"),
 			Stakeholders: getEnv("STAKEHOLDERS_SERVICE_URL", "http://stakeholders-service:8081"),
 			Follower:     getEnv("FOLLOWER_SERVICE_URL", "http://follower-service:8083"),
-			Tours:        getEnv("TOURS_SERVICE_URL", "tours-service:50051"),
+			Tours:        getEnv("TOURS_SERVICE_GRPC_URL", "tours-service:50051"),
+			ToursAPI:     getEnv("TOURS_SERVICE_API_URL", "http://tours-service:8081"),
 		},
 		Auth: AuthConfig{
 			JWTSecret: getEnv("JWT_SECRET", "your-secret-key"),

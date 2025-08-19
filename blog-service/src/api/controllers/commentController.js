@@ -1,5 +1,8 @@
 const commentService = require('../../service/commentService');
 const authService = require('../../service/authService');
+const followerService = require('../../service/followerService');
+const blogService = require('../../service/blogService');
+const { blog } = require('../../config/prisma');
 
 exports.createComment = async (req, res, next) => {
     try {
@@ -10,11 +13,25 @@ exports.createComment = async (req, res, next) => {
                 message: "Forbidden"
             });
         }
-
-        if (data.role != "Tourist" && data.role != "Guide") {
+        const blogId = req.body.blogId;
+        if (!blogId) {
+            return res.status(400).json({
+                success: false,
+                message: "Blog ID is required"
+            });
+        }
+        const blog = await blogService.getBlogById(blogId);
+        if (!blog) {
+            return res.status(404).json({
+                success: false,
+                message: "Blog not found"
+            });
+        }
+        console.log("Checking if user is followed...");
+        if (!(await followerService.isUserFollowedByMe(req.headers.authorization, blog.userId))) {
             return res.status(403).json({
                 success: false,
-                message: "Forbidden"
+                message: "Forbidden: You are not allowed to comment on this blog, you must follow the author."
             });
         }
         const commentData = req.body;
