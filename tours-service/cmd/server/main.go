@@ -40,16 +40,19 @@ func main() {
 	// --- Repositories ---
 	tourRepo := repositories.NewTourRepository(toursDB)
 	keypointRepo := repositories.NewKeypointRepository(toursDB)
+	tourExecutionRepo := repositories.NewTourExecutionRepository(toursDB)
 
 	// --- Services ---
 	mapService := services.NewMapService(os.Getenv("MAP_SERVICE_URL"))
 	tourService := services.NewTourService(tourRepo, keypointRepo, mapService)
 	keypointService := services.NewKeypointService(keypointRepo)
 	authService := services.NewAuthService()
+	tourExecutionService := services.NewTourExecutionService(tourExecutionRepo, tourService, keypointService)
 
 	// --- HTTP Handlers ---
 	tourHandler := handlers.NewTourHandler(tourService, authService)
 	keypointHandler := handlers.NewKeypointHandler(keypointService, tourService, authService)
+	TourExecutionHandler := handlers.NewTourExecutionHandler(tourExecutionService, authService)
 
 	router := mux.NewRouter()
 	apiRouter := router.PathPrefix("/api").Subrouter()
@@ -71,6 +74,12 @@ func main() {
 	apiRouter.HandleFunc("/keypoints/{keypointId}", keypointHandler.GetKeypointByID).Methods("GET")
 	apiRouter.HandleFunc("/keypoints/{keypointId}", keypointHandler.UpdateKeypoint).Methods("PUT")
 	apiRouter.HandleFunc("/keypoints/{keypointId}", keypointHandler.DeleteKeypoint).Methods("DELETE")
+
+	// -- Execution routes --
+	executionRouter := apiRouter.PathPrefix("/execution").Subrouter()
+	executionRouter.HandleFunc("/start/{tour_id}", TourExecutionHandler.StartTourExecution).Methods("POST")
+	// executionRouter.HandleFunc("/abort")
+	// executionRouter.HandleFunc("/check-distance")
 
 	// --- Start gRPC Server ---
 	grpcLis, err := net.Listen("tcp", ":50051")

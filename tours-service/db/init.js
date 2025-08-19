@@ -122,4 +122,72 @@ if (collectionNames.includes('keypoints')) {
     console.log("Indexes for 'keypoints' collection created/ensured.");
 }
 
+if (collectionNames.includes('tourExecution')) {
+    console.log("'tourExecution' collection already exists. Skipping creation.");
+} else {
+    console.log("'tourExecution' collection does not exist. Creating now...");
+    db.createCollection('tourExecution', {
+      validator: {
+        $jsonSchema: {
+          bsonType: "object",
+          required: ["_id", "tour_id", "user_id", "started_at", "status", "last_activity"],
+          properties: {
+            _id: {
+              bsonType: "int",
+              description: "must be an integer and is required. Managed by the application."
+            },
+            tour_id: {
+              bsonType: "int",
+              description: "must be an integer and is required."
+            },
+            user_id: {
+              bsonType: "int",
+              description: "must be an integer and is required."
+            },
+            started_at: {
+              bsonType: "date",
+              description: "must be a date and is required."
+            },
+            ended_at: {
+              bsonType: "date",
+              description: "must be a date."
+            },
+            last_activity: {
+              bsonType: "date",
+              description: "must be a date and is required."
+            },
+            status: {
+              enum: ["pending", "in_progress", "completed", "failed"],
+              description: "can only be one of the enum values and is required."
+            },
+            finished_keypoints: {
+              bsonType: "array",
+              description: "must be an array of finished keypoints.",
+              items: {
+                bsonType: "object",
+                required: ["keypoint_id", "completed_at"],
+                properties: {
+                  keypoint_id: {
+                    bsonType: "int",
+                    description: "must be an integer and is required."
+                  },
+                  completed_at: {
+                    bsonType: "date",
+                    description: "must be a date and is required."
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    });
+
+    console.log("Collection 'tourExecution' created with validation rules.");
+
+    db.tourExecution.createIndex({ "tour_id": 1, "user_id": 1 }, { unique: true });
+
+    console.log("Indexes for 'tourExecution' collection created/ensured.");
+}
+
 console.log("Database initialization script finished.");
