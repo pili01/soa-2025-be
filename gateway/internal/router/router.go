@@ -82,17 +82,26 @@ func (r *Router) setupRoutes() {
             toursGroup.GET("/:tourId", r.handleServiceRequest("tours"))
             toursGroup.GET("/:tourId/get-published", r.handleServiceRequest("tours"))
             toursGroup.PUT("/:tourId", r.handleServiceRequest("tours"))
-            toursGroup.DELETE("/:tourId", r.handleServiceRequest("tours"))
-            toursGroup.POST("/:tourId/publish", r.handleServiceRequest("tours"))
-            toursGroup.POST("/:tourId/archive", r.handleServiceRequest("tours"))
-            toursGroup.POST("/:tourId/set-price", r.handleServiceRequest("tours"))
-            
-            
-            toursGroup.POST("/:tourId/create-keypoint", r.handleServiceRequest("tours"))
-            toursGroup.GET("/:tourId/keypoints", r.handleServiceRequest("tours"))
-            toursGroup.GET("/keypoints/:keypointId", r.handleServiceRequest("tours"))
-            toursGroup.PUT("/keypoints/:keypointId", r.handleServiceRequest("tours"))
-            toursGroup.DELETE("/keypoints/:keypointId", r.handleServiceRequest("tours"))
+                    toursGroup.DELETE("/:tourId", r.handleServiceRequest("tours"))
+        toursGroup.POST("/:tourId/publish", r.handleServiceRequest("tours"))
+        toursGroup.POST("/:tourId/archive", r.handleServiceRequest("tours"))
+        toursGroup.POST("/:tourId/set-price", r.handleServiceRequest("tours"))
+        
+        
+        toursGroup.POST("/:tourId/create-keypoint", r.handleServiceRequest("tours"))
+        toursGroup.GET("/:tourId/keypoints", r.handleServiceRequest("tours"))
+        toursGroup.GET("/keypoints/:keypointId", r.handleServiceRequest("tours"))
+        toursGroup.PUT("/keypoints/:keypointId", r.handleServiceRequest("tours"))
+        toursGroup.DELETE("/keypoints/:keypointId", r.handleServiceRequest("tours"))
+        
+        // Purchase service routes
+        api.Any("/cart", r.handlePurchaseProxyRequest())
+        api.Any("/cart/*path", r.handlePurchaseProxyRequest())
+        api.Any("/checkout", r.handlePurchaseProxyRequest())
+        api.Any("/checkout/*path", r.handlePurchaseProxyRequest())
+        api.Any("/purchases", r.handlePurchaseProxyRequest())
+        api.Any("/purchases/*path", r.handlePurchaseProxyRequest())
+        api.Any("/validate-token", r.handlePurchaseProxyRequest())
         }
     }
 
@@ -221,12 +230,39 @@ func (r *Router) handleImageProxyRequest() gin.HandlerFunc {
     }
 }
 
+func (r *Router) handlePurchaseProxyRequest() gin.HandlerFunc {
+    return func(c *gin.Context) {
+        serviceProxy, exists := r.serviceRegistry.GetService("purchase")
+        if !exists {
+            log.Error().Str("service", "purchase").Msg("Purchase service not found")
+            c.JSON(http.StatusServiceUnavailable, gin.H{"error": "Purchase service not available"})
+            c.Abort()
+            return
+        }
+        
+        originalPath := c.Request.URL.Path
+        // Putanja u gateway-u je /api/cart/*path, a servis ocekuje /cart/*path
+        newPath := strings.TrimPrefix(originalPath, "/api")
+        c.Request.URL.Path = newPath
+
+        // Prosleđujemo sve header-e, uključujući Authorization
+        log.Debug().
+            Str("original_path", originalPath).
+            Str("new_path", c.Request.URL.Path).
+            Str("authorization", c.Request.Header.Get("Authorization")).
+            Msg("Routing purchase request")
+
+        serviceProxy.ServeHTTP(c.Writer, c.Request)
+    }
+}
+
 func registerServices(registry *proxy.ServiceRegistry, services config.ServicesConfig) error {
     serviceMappings := map[string]string{
         "blog":         services.Blog,
         "image":        services.Image,
         "stakeholders": services.Stakeholders,
         "tours":        services.Tours,
+        "purchase":     services.Purchase,
     }
 
     for name, url := range serviceMappings {
@@ -241,3 +277,5 @@ func registerServices(registry *proxy.ServiceRegistry, services config.ServicesC
 func (r *Router) GetEngine() *gin.Engine {
     return r.engine
 }
+
+

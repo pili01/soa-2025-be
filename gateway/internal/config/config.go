@@ -25,6 +25,7 @@ type ServicesConfig struct {
 	Image        string
 	Stakeholders string
 	Tours        string
+	Purchase     string
 }
 
 type AuthConfig struct {
@@ -64,6 +65,7 @@ func Load() (*Config, error) {
 			Image:        getEnv("IMAGE_SERVICE_URL", "http://image-service:3001"),
 			Stakeholders: getEnv("STAKEHOLDERS_SERVICE_URL", "http://stakeholders-service:8081"),
 			Tours:        getEnv("TOURS_SERVICE_URL", "http://tours-service:8082"),
+			Purchase:     getEnv("PURCHASE_SERVICE_URL", "http://purchase-service:8080"),
 		},
 		Auth: AuthConfig{
 			JWTSecret: getEnv("JWT_SECRET", "your-secret-key"),
@@ -88,5 +90,7 @@ func getEnvAsInt(key string, defaultValue int) int {
 	}
 	return defaultValue
 }
+
+
 
 

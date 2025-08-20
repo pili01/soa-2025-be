@@ -13,12 +13,14 @@ services:
       - IMAGE_SERVICE_URL=http://image-service:3000
       - STAKEHOLDERS_SERVICE_URL=http://stakeholders-service:8080
       - TOURS_SERVICE_URL=http://tours-service:8080
+      - PURCHASE_SERVICE_URL=http://purchase-service:8080
       - JWT_SECRET=U1aZEDdXc8r+07B7Ez9eBl8Yec3H1oD06rGecIuhV4k=
     depends_on:
       - blog-service
       - image-service
       - stakeholders-service
       - tours-service
+      - purchase-service
     networks: [soa-network]
     restart: unless-stopped
 
@@ -145,6 +147,38 @@ services:
     restart: unless-stopped
     networks: [soa-network]
 
+  purchase-db:
+    image: postgres:17.5
+    container_name: purchase-db
+    env_file:
+      - ./purchase-service/db/.env
+    ports:
+      - "5436:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    volumes:
+      - purchase-db-data:/var/lib/postgresql/data
+      - ./purchase-service/db:/docker-entrypoint-initdb.d
+    networks: [soa-network]
+
+  purchase-service:
+    build:
+      context: ./purchase-service
+      dockerfile: .Dockerfile
+    container_name: purchase-service
+    ports:
+      - "8083:8080"
+    depends_on:
+      - purchase-db
+      - tours-service
+      - stakeholders-service
+    env_file:
+      - ./purchase-service/.env
+    networks: [soa-network]
+
 networks:
   soa-network:
     driver: bridge
@@ -153,3 +187,4 @@ volumes:
   stakeholders-db-data:
   blog-db-data:
   tours-db-data:
+  purchase-db-data:
