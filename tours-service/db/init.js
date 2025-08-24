@@ -157,7 +157,7 @@ if (collectionNames.includes('tourExecution')) {
               description: "must be a date and is required."
             },
             status: {
-              enum: ["pending", "in_progress", "completed", "failed"],
+              enum: ["pending", "in_progress", "completed", "failed", "aborted"],
               description: "can only be one of the enum values and is required."
             },
             finished_keypoints: {

@@ -34,11 +34,33 @@ func (h *TourExecutionHandler) StartTourExecution(w http.ResponseWriter, r *http
 		http.Error(w, "Invalid or missing tour_id", http.StatusBadRequest)
 		return
 	}
-	tourId, err := h.tourExecutionService.StartTour(userID, tourID)
+	tourId, httpStatus, err := h.tourExecutionService.StartTour(userID, tourID)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		http.Error(w, err.Error(), httpStatus)
+		return
+	}
+	w.WriteHeader(httpStatus)
+	w.Write([]byte(fmt.Sprintf("Tour successfully started: %d", tourId)))
+}
+
+func (h *TourExecutionHandler) AbortExecution(w http.ResponseWriter, r *http.Request) {
+	userId, err := h.authService.ValidateAndGetUserID(r, "Tourist")
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusUnauthorized)
+		return
+	}
+	vars := mux.Vars(r)
+	tourIdStr := vars["tour_id"]
+	tourId, err := strconv.Atoi(tourIdStr)
+	if err != nil {
+		http.Error(w, "Invalid or missing tour_id", http.StatusBadRequest)
+		return
+	}
+	httpStatus, err := h.tourExecutionService.AbortExecution(tourId, userId)
+	if err != nil {
+		http.Error(w, err.Error(), httpStatus)
 		return
 	}
 	w.WriteHeader(http.StatusOK)
-	w.Write([]byte(fmt.Sprintf("Tour successfully started: %d", tourId)))
+	w.Write([]byte("Tour execution successfully aborted"))
 }

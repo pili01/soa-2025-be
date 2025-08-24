@@ -78,7 +78,7 @@ func main() {
 	// -- Execution routes --
 	executionRouter := apiRouter.PathPrefix("/execution").Subrouter()
 	executionRouter.HandleFunc("/start/{tour_id}", TourExecutionHandler.StartTourExecution).Methods("POST")
-	// executionRouter.HandleFunc("/abort")
+	executionRouter.HandleFunc("/abort/{tour_id}", TourExecutionHandler.AbortExecution).Methods("POST")
 	// executionRouter.HandleFunc("/check-distance")
 
 	// --- Start gRPC Server ---

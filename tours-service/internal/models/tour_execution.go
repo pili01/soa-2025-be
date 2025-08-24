@@ -9,6 +9,7 @@ const (
 	ExecutionStatusInProgress ExecutionStatus = "in_progress"
 	ExecutionStatusCompleted  ExecutionStatus = "completed"
 	ExecutionStatusFailed     ExecutionStatus = "failed"
+	ExecutionStatusAborted    ExecutionStatus = "aborted"
 )
 
 type TourExecution struct {

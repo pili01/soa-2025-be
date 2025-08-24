@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"net/http"
 	"time"
 	"tours-service/internal/models"
 
@@ -47,4 +48,22 @@ func (r *TourExecutionRepository) CreateExecution(tourExecution *models.TourExec
 		return fmt.Errorf("failed to create tour execution: %w", err)
 	}
 	return nil
+}
+
+func (r *TourExecutionRepository) AbortExecution(tourExecution *models.TourExecution) (int, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	filter := bson.M{"_id": tourExecution.ID}
+	update := bson.M{
+		"status":        tourExecution.Status,
+		"ended_at":      tourExecution.EndedAt,
+		"last_activity": tourExecution.LastActivity,
+	}
+	_, err := r.TourExCollection.UpdateOne(ctx, filter, bson.M{"$set": update})
+	if err != nil {
+		fmt.Printf("Error aborting tour execution: %v\n", err)
+		return http.StatusInternalServerError, err
+	}
+	return http.StatusOK, nil
 }
