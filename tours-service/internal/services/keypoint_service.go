@@ -36,3 +36,7 @@ func (s *KeypointService) DeleteKeypoint(keypointID int) error {
 func (s *KeypointService) DeleteKeypointsByTourID(tourID int) error {
 	return s.KeypointRepo.DeleteKeypointsByTourID(tourID)
 }
+
+func (s *KeypointService) GetNextUncompletedKeyPointByTourId(tourID int, completedPoints []int) (*models.Keypoint, error) {
+	return s.KeypointRepo.GetUncompletedKeyPointsByTourId(tourID, completedPoints)
+}

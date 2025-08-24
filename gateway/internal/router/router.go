@@ -100,7 +100,7 @@ func (r *Router) setupRoutes() {
 			toursGroup.DELETE("/keypoints/:keypointId", r.handleServiceRequest("tours"))
 			toursGroup.POST("/execution/start/:tour_id", r.handleServiceRequest("tours"))
 			toursGroup.POST("/execution/abort/:tour_id", r.handleServiceRequest("tours"))
-			toursGroup.POST("/execution/check-distance/:tour_id", r.handleServiceRequest("tours"))
+			toursGroup.POST("/execution/is-keypoint-reached/:tour_id", r.handleServiceRequest("tours"))
 		}
 	}
 

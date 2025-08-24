@@ -79,7 +79,7 @@ func main() {
 	executionRouter := apiRouter.PathPrefix("/execution").Subrouter()
 	executionRouter.HandleFunc("/start/{tour_id}", TourExecutionHandler.StartTourExecution).Methods("POST")
 	executionRouter.HandleFunc("/abort/{tour_id}", TourExecutionHandler.AbortExecution).Methods("POST")
-	// executionRouter.HandleFunc("/check-distance")
+	executionRouter.HandleFunc("/is-keypoint-reached/{tour_id}", TourExecutionHandler.CheckIsKeyPointReached).Methods("POST")
 
 	// --- Start gRPC Server ---
 	grpcLis, err := net.Listen("tcp", ":50051")
