@@ -6,10 +6,11 @@ import (
 	"fmt"
 	"time"
 
+	"tours-service/internal/models"
+
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
-	"tours-service/internal/models"
 )
 
 type KeypointRepository struct {
@@ -179,5 +180,26 @@ func (r *KeypointRepository) GetFirstKeypointByTourID(tourID int) (*models.Keypo
 		return nil, fmt.Errorf("failed to find first keypoint: %w", err)
 	}
 
+	return &keypoint, nil
+}
+
+func (r *KeypointRepository) GetUncompletedKeyPointsByTourId(tourId int, completedPoints []int) (*models.Keypoint, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	filter := bson.M{
+		"tourId": tourId,
+	}
+	if len(completedPoints) > 0 {
+		filter["_id"] = bson.M{"$nin": completedPoints}
+	}
+
+	opts := options.FindOne().SetSort(bson.D{{Key: "ordinal", Value: 1}})
+	var keypoint models.Keypoint
+
+	err := r.Collection.FindOne(ctx, filter, opts).Decode(&keypoint)
+	if err != nil {
+		return nil, err
+	}
 	return &keypoint, nil
 }
