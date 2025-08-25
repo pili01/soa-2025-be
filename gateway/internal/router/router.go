@@ -98,6 +98,10 @@ func (r *Router) setupRoutes() {
 			toursGroup.GET("/keypoints/:keypointId", r.handleServiceRequest("tours"))
 			toursGroup.PUT("/keypoints/:keypointId", r.handleServiceRequest("tours"))
 			toursGroup.DELETE("/keypoints/:keypointId", r.handleServiceRequest("tours"))
+
+			toursGroup.POST("/reviews", r.handleServiceRequest("tours"))
+			toursGroup.GET("/:tourId/reviews", r.handleServiceRequest("tours"))
+			
 		}
 	}
 

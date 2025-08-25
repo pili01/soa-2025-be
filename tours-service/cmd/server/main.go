@@ -46,20 +46,21 @@ func main() {
 	// --- Services ---
 	mapService := services.NewMapService(os.Getenv("MAP_SERVICE_URL"))
 	tourService := services.NewTourService(tourRepo, keypointRepo, mapService)
+	tourReviewService := services.NewTourReviewService(reviewRepo)
 	keypointService := services.NewKeypointService(keypointRepo)
 	authService := services.NewAuthService()
 
 	// --- HTTP Handlers ---
 	tourHandler := handlers.NewTourHandler(tourService, authService)
 	keypointHandler := handlers.NewKeypointHandler(keypointService, tourService, authService)
-	reviewHandler := handlers.NewTourReviewHandler(reviewRepo, tourRepo)
+	reviewHandler := handlers.NewTourReviewHandler(tourReviewService, tourService, authService)
 
 	router := mux.NewRouter()
 	api := router.PathPrefix("/api").Subrouter()
 
 	// --- Review routes ---
 	api.HandleFunc("/reviews", reviewHandler.CreateTourReview).Methods("POST")
-	api.HandleFunc("/tours/{tourId}/reviews", reviewHandler.GetReviewsByTourID).Methods("GET")
+	api.HandleFunc("/{tourId}/reviews", reviewHandler.GetReviewsByTourID).Methods("GET")
 
 	// --- Tour routes ---
 	api.HandleFunc("/create", tourHandler.CreateTour).Methods("POST")
