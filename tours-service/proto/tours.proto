@@ -1,0 +1,80 @@
+syntax = "proto3";
+
+option go_package = "proto/compiled";
+
+package tours;
+
+message TourForCreation {
+    string name = 1;
+    string description = 2;
+    string difficulty = 3;
+    repeated string tags = 4;
+}
+
+message KeypointForCreation {
+    string name = 1;
+    string description = 2;
+    string image_url = 3;
+    double latitude = 4;
+    double longitude = 5;
+    int32 ordinal = 6;
+}
+
+message CreateTourRequest {
+    TourForCreation tour = 1;
+    repeated KeypointForCreation keypoints = 2;
+    int32 user_id = 3;
+}
+
+message DistanceAndDuration {
+  double distance = 1;
+  double duration = 2;
+}
+
+message TourResponse {
+  int32 id = 1;
+  int32 author_id = 2;
+  string name = 3;
+  string description = 4;
+  string difficulty = 5;
+  repeated string tags = 6;
+  string status = 7;
+  double price = 8;
+
+  DistanceAndDuration driving_stats = 9;
+  DistanceAndDuration walking_stats = 10;
+  DistanceAndDuration cycling_stats = 11;
+  
+  string time_published = 12;
+  string time_archived = 13;
+  string time_drafted = 14;
+}
+
+message GetToursByAuthorIDRequest {
+  int32 user_id = 1;
+}
+
+message GetToursByAuthorIDResponse {
+  repeated TourResponse tours = 1;
+}
+
+message GetTourByIDRequest {
+  int32 tour_id = 1;
+}
+
+message SetTourPriceRequest {
+    int32 tour_id = 1;
+    double price = 2;
+    int32 user_id = 3;
+}
+
+message SetTourPriceResponse {
+    string message = 1;
+}
+
+service TourService {
+    rpc CreateTour(CreateTourRequest) returns (TourResponse);
+    rpc GetToursByAuthorID(GetToursByAuthorIDRequest) returns (GetToursByAuthorIDResponse);
+    rpc GetTourByID(GetTourByIDRequest) returns (TourResponse);
+    rpc SetTourPrice(SetTourPriceRequest) returns (SetTourPriceResponse);
+}

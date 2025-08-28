@@ -25,6 +25,8 @@ type ServicesConfig struct {
 	Image        string
 	Stakeholders string
 	Tours        string
+	ToursAPI     string
+	Follower     string
 	Purchase     string
 }
 
@@ -64,7 +66,9 @@ func Load() (*Config, error) {
 			Blog:         getEnv("BLOG_SERVICE_URL", "http://blog-service:3000"),
 			Image:        getEnv("IMAGE_SERVICE_URL", "http://image-service:3001"),
 			Stakeholders: getEnv("STAKEHOLDERS_SERVICE_URL", "http://stakeholders-service:8081"),
-			Tours:        getEnv("TOURS_SERVICE_URL", "http://tours-service:8082"),
+			Follower:     getEnv("FOLLOWER_SERVICE_URL", "http://follower-service:8083"),
+			Tours:        getEnv("TOURS_SERVICE_GRPC_URL", "tours-service:50051"),
+			ToursAPI:     getEnv("TOURS_SERVICE_API_URL", "http://tours-service:8081"),
 			Purchase:     getEnv("PURCHASE_SERVICE_URL", "http://purchase-service:8080"),
 		},
 		Auth: AuthConfig{
@@ -90,7 +94,3 @@ func getEnvAsInt(key string, defaultValue int) int {
 	}
 	return defaultValue
 }
-
-
-
-

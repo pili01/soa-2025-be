@@ -1,12 +1,12 @@
-FROM golang:1.22.4-alpine AS builder
+FROM golang:1.23-alpine AS builder
 
 WORKDIR /app
 
 COPY go.mod go.sum ./
 
-COPY . .
+RUN go mod download
 
-RUN go mod tidy
+COPY . .
 
 RUN CGO_ENABLED=0 go build -o /app/stakeholders-service ./cmd/server/main.go
 

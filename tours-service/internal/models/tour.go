@@ -31,11 +31,13 @@ type Tour struct {
 	Tags []string `bson:"tags" json:"tags"`
 	Status TourStatus `bson:"status" json:"status"` // Draft, Published, Archived
 	Price float64 `bson:"price" json:"price"`
+	Keypoints []Keypoint `bson:"keypoints,omitempty" json:"keypoints,omitempty"` // Lista keypoint-a
+	Reviews []TourReview `bson:"reviews,omitempty" json:"reviews,omitempty"`
 
 	// Distance and duration statistics
 	DrivingStats DistanceAndDuration `bson:"drivingStats,omitempty" json:"drivingStats,omitempty"`
-  WalkingStats DistanceAndDuration `bson:"walkingStats,omitempty" json:"walkingStats,omitempty"`
-  CyclingStats DistanceAndDuration `bson:"cyclingStats,omitempty" json:"cyclingStats,omitempty"`
+	WalkingStats DistanceAndDuration `bson:"walkingStats,omitempty" json:"walkingStats,omitempty"`
+	CyclingStats DistanceAndDuration `bson:"cyclingStats,omitempty" json:"cyclingStats,omitempty"`
 
 	// Timestamps
 	TimePublished *time.Time `bson:"timePublished,omitempty" json:"timePublished,omitempty"`

@@ -9,6 +9,7 @@ datasource db {
 
 model Blog {
   id        Int      @id @default(autoincrement())
+  userId    Int
   title     String
   content   String
   createdAt DateTime @default(now()) @map("created_at")
@@ -16,6 +17,7 @@ model Blog {
   likes    BlogLike[]
   comments BlogComment[]
 
+  @@index([userId])
   @@map("blogs")
 }
 
