@@ -11,3 +11,10 @@ CREATE TABLE IF NOT EXISTS users (
     photo_url VARCHAR(255),
     is_blocked BOOLEAN NOT NULL DEFAULT FALSE
 );
+
+CREATE TABLE IF NOT EXISTS positions (
+    id SERIAL PRIMARY KEY,
+    user_id INT UNIQUE NOT NULL,
+    longitude FLOAT NOT NULL,
+    latitude FLOAT NOT NULL
+);
