@@ -85,7 +85,7 @@ func main() {
 	api.HandleFunc("/keypoints/{keypointId}", keypointHandler.DeleteKeypoint).Methods("DELETE")
 
 	// -- Execution routes --
-	executionRouter := apiRouter.PathPrefix("/execution").Subrouter()
+	executionRouter := api.PathPrefix("/execution").Subrouter()
 	executionRouter.HandleFunc("/start/{tour_id}", TourExecutionHandler.StartTourExecution).Methods("POST")
 	executionRouter.HandleFunc("/abort/{tour_id}", TourExecutionHandler.AbortExecution).Methods("POST")
 	executionRouter.HandleFunc("/is-keypoint-reached/{tour_id}", TourExecutionHandler.CheckIsKeyPointReached).Methods("POST")

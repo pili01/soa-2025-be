@@ -25,6 +25,9 @@ func main() {
 	userRepo := repository.NewUserRepository(database)
 	userHandler := handlers.NewUserHandler(userRepo)
 
+	positionRepo := repository.NewPositionRepository(database)
+	positionHandler := handlers.NewPositionHandler(positionRepo)
+
 	router := mux.NewRouter()
 	router.HandleFunc("/api/register", userHandler.RegisterUser).Methods("POST")
 	router.HandleFunc("/api/login", userHandler.LoginUser).Methods("POST")
@@ -35,6 +38,9 @@ func main() {
 
 	router.HandleFunc("/api/admin/users", userHandler.GetAllUsers).Methods("GET")
 	router.HandleFunc("/api/admin/users/block", userHandler.BlockUser).Methods("PUT")
+
+	router.HandleFunc("/api/position/{userId}", positionHandler.GetPosition).Methods("GET")	
+	router.HandleFunc("/api/position", positionHandler.CreatePosition).Methods("POST")
 
 	go func() {
 		lis, err := net.Listen("tcp", ":8000")
