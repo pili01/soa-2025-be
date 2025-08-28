@@ -2,7 +2,7 @@
 // versions:
 // - protoc-gen-go-grpc v1.5.1
 // - protoc             v6.32.0
-// source: tours.proto
+// source: proto/tours.proto
 
 package compiled
 
@@ -21,6 +21,8 @@ const _ = grpc.SupportPackageIsVersion9
 const (
 	TourService_CreateTour_FullMethodName         = "/tours.TourService/CreateTour"
 	TourService_GetToursByAuthorID_FullMethodName = "/tours.TourService/GetToursByAuthorID"
+	TourService_GetTourByID_FullMethodName        = "/tours.TourService/GetTourByID"
+	TourService_SetTourPrice_FullMethodName       = "/tours.TourService/SetTourPrice"
 )
 
 // TourServiceClient is the client API for TourService service.
@@ -29,6 +31,8 @@ const (
 type TourServiceClient interface {
 	CreateTour(ctx context.Context, in *CreateTourRequest, opts ...grpc.CallOption) (*TourResponse, error)
 	GetToursByAuthorID(ctx context.Context, in *GetToursByAuthorIDRequest, opts ...grpc.CallOption) (*GetToursByAuthorIDResponse, error)
+	GetTourByID(ctx context.Context, in *GetTourByIDRequest, opts ...grpc.CallOption) (*TourResponse, error)
+	SetTourPrice(ctx context.Context, in *SetTourPriceRequest, opts ...grpc.CallOption) (*SetTourPriceResponse, error)
 }
 
 type tourServiceClient struct {
@@ -59,12 +63,34 @@ func (c *tourServiceClient) GetToursByAuthorID(ctx context.Context, in *GetTours
 	return out, nil
 }
 
+func (c *tourServiceClient) GetTourByID(ctx context.Context, in *GetTourByIDRequest, opts ...grpc.CallOption) (*TourResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(TourResponse)
+	err := c.cc.Invoke(ctx, TourService_GetTourByID_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *tourServiceClient) SetTourPrice(ctx context.Context, in *SetTourPriceRequest, opts ...grpc.CallOption) (*SetTourPriceResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(SetTourPriceResponse)
+	err := c.cc.Invoke(ctx, TourService_SetTourPrice_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // TourServiceServer is the server API for TourService service.
 // All implementations must embed UnimplementedTourServiceServer
 // for forward compatibility.
 type TourServiceServer interface {
 	CreateTour(context.Context, *CreateTourRequest) (*TourResponse, error)
 	GetToursByAuthorID(context.Context, *GetToursByAuthorIDRequest) (*GetToursByAuthorIDResponse, error)
+	GetTourByID(context.Context, *GetTourByIDRequest) (*TourResponse, error)
+	SetTourPrice(context.Context, *SetTourPriceRequest) (*SetTourPriceResponse, error)
 	mustEmbedUnimplementedTourServiceServer()
 }
 
@@ -80,6 +106,12 @@ func (UnimplementedTourServiceServer) CreateTour(context.Context, *CreateTourReq
 }
 func (UnimplementedTourServiceServer) GetToursByAuthorID(context.Context, *GetToursByAuthorIDRequest) (*GetToursByAuthorIDResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetToursByAuthorID not implemented")
+}
+func (UnimplementedTourServiceServer) GetTourByID(context.Context, *GetTourByIDRequest) (*TourResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetTourByID not implemented")
+}
+func (UnimplementedTourServiceServer) SetTourPrice(context.Context, *SetTourPriceRequest) (*SetTourPriceResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method SetTourPrice not implemented")
 }
 func (UnimplementedTourServiceServer) mustEmbedUnimplementedTourServiceServer() {}
 func (UnimplementedTourServiceServer) testEmbeddedByValue()                     {}
@@ -138,6 +170,42 @@ func _TourService_GetToursByAuthorID_Handler(srv interface{}, ctx context.Contex
 	return interceptor(ctx, in, info, handler)
 }
 
+func _TourService_GetTourByID_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetTourByIDRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(TourServiceServer).GetTourByID(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: TourService_GetTourByID_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(TourServiceServer).GetTourByID(ctx, req.(*GetTourByIDRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _TourService_SetTourPrice_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(SetTourPriceRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(TourServiceServer).SetTourPrice(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: TourService_SetTourPrice_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(TourServiceServer).SetTourPrice(ctx, req.(*SetTourPriceRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // TourService_ServiceDesc is the grpc.ServiceDesc for TourService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -153,7 +221,15 @@ var TourService_ServiceDesc = grpc.ServiceDesc{
 			MethodName: "GetToursByAuthorID",
 			Handler:    _TourService_GetToursByAuthorID_Handler,
 		},
+		{
+			MethodName: "GetTourByID",
+			Handler:    _TourService_GetTourByID_Handler,
+		},
+		{
+			MethodName: "SetTourPrice",
+			Handler:    _TourService_SetTourPrice_Handler,
+		},
 	},
 	Streams:  []grpc.StreamDesc{},
-	Metadata: "tours.proto",
+	Metadata: "proto/tours.proto",
 }

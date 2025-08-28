@@ -58,7 +58,23 @@ message GetToursByAuthorIDResponse {
   repeated TourResponse tours = 1;
 }
 
+message GetTourByIDRequest {
+  int32 tour_id = 1;
+}
+
+message SetTourPriceRequest {
+    int32 tour_id = 1;
+    double price = 2;
+    int32 user_id = 3;
+}
+
+message SetTourPriceResponse {
+    string message = 1;
+}
+
 service TourService {
     rpc CreateTour(CreateTourRequest) returns (TourResponse);
     rpc GetToursByAuthorID(GetToursByAuthorIDRequest) returns (GetToursByAuthorIDResponse);
+    rpc GetTourByID(GetTourByIDRequest) returns (TourResponse);
+    rpc SetTourPrice(SetTourPriceRequest) returns (SetTourPriceResponse);
 }
