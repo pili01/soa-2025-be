@@ -76,6 +76,7 @@ func (r *Router) setupRoutes() {
 
 		api.Any("/images/*path", r.handleImageProxyRequest())
 		api.Any("/image/*path", r.handleImageProxyRequest())
+		api.Any("/keypoint-image/*path", r.handleImageProxyRequest())
 
 		api.Any("/stakeholders/*path", r.handleStakeholdersProxyRequest())
 		api.Any("/stakeholder/*path", r.handleStakeholdersProxyRequest())
@@ -97,6 +98,7 @@ func (r *Router) setupRoutes() {
 			toursGroup.GET("/keypoints/:keypointId", r.handleServiceRequest("tours"))
 			toursGroup.PUT("/keypoints/:keypointId", r.handleServiceRequest("tours"))
 			toursGroup.DELETE("/keypoints/:keypointId", r.handleServiceRequest("tours"))
+			toursGroup.POST("/keypoints/:keypointId/upload-image", r.handleServiceRequest("tours"))
 
 			toursGroup.POST("/reviews", r.handleServiceRequest("tours"))
 			toursGroup.GET("/:tourId/reviews", r.handleServiceRequest("tours"))
@@ -394,8 +396,19 @@ func (r *Router) handleImageProxyRequest() gin.HandlerFunc {
 		}
 
 		originalPath := c.Request.URL.Path
-		// Putanja u gateway-u je /api/images/*path, a servis ocekuje /api/*path
-		newPath := strings.TrimPrefix(originalPath, "/api/images")
+		var newPath string
+		
+		// Handle different image service paths
+		if strings.HasPrefix(originalPath, "/api/images") {
+			newPath = strings.TrimPrefix(originalPath, "/api/images")
+		} else if strings.HasPrefix(originalPath, "/api/image") {
+			newPath = strings.TrimPrefix(originalPath, "/api/image")
+		} else if strings.HasPrefix(originalPath, "/api/keypoint-image") {
+			newPath = strings.TrimPrefix(originalPath, "/api/keypoint-image")
+		} else {
+			newPath = originalPath
+		}
+		
 		finalPath := "/api" + newPath
 		c.Request.URL.Path = finalPath
 

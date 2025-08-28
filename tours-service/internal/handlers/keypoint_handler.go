@@ -1,8 +1,14 @@
 package handlers
 
 import (
+	"bytes"
 	"encoding/json"
+	"fmt"
+	"io"
+	"mime/multipart"
 	"net/http"
+	"os"
+	"path/filepath"
 	"strconv"
 	"strings"
 
@@ -235,4 +241,121 @@ func (h *KeypointHandler) DeleteKeypoint(w http.ResponseWriter, r *http.Request)
 	json.NewEncoder(w).Encode(map[string]string{
 		"message": "Keypoint deleted successfully",
 	})
+}
+
+// UploadKeypointImage handles image upload for a specific keypoint
+func (h *KeypointHandler) UploadKeypointImage(w http.ResponseWriter, r *http.Request) {
+	if err := r.ParseMultipartForm(32 << 20); err != nil {
+		http.Error(w, "Error parsing form data: "+err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	keypointID, err := strconv.Atoi(r.FormValue("keypointId"))
+	if err != nil {
+		http.Error(w, "Invalid or missing keypointId", http.StatusBadRequest)
+		return
+	}
+
+	// Get keypoint to verify it exists and get tour ID
+	keypoint, err := h.keypointService.GetKeypointByID(keypointID)
+	if err != nil {
+		http.Error(w, "Keypoint not found", http.StatusNotFound)
+		return
+	}
+
+	// Verify user is the tour author
+	userID, err := h.authService.ValidateAndGetUserID(r, "Guide")
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusUnauthorized)
+		return
+	}
+
+	tour, err := h.tourService.GetTourByID(keypoint.TourID)
+	if err != nil {
+		http.Error(w, "Tour not found", http.StatusNotFound)
+		return
+	}
+
+	if tour.AuthorID != userID {
+		http.Error(w, "Only tour author can upload keypoint images", http.StatusForbidden)
+		return
+	}
+
+	file, handler, err := r.FormFile("image")
+	if err != nil {
+		http.Error(w, "No image file uploaded", http.StatusBadRequest)
+		return
+	}
+	defer file.Close()
+
+	photoURL, uploadErr := h.uploadKeypointImageToService(file, handler.Filename, keypointID, keypoint.TourID)
+	if uploadErr != nil {
+		http.Error(w, "Failed to upload image: "+uploadErr.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	// Update keypoint with new image URL
+	keypoint.ImageURL = photoURL
+	err = h.keypointService.UpdateKeypoint(keypoint)
+	if err != nil {
+		http.Error(w, "Failed to update keypoint with image URL", http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(map[string]interface{}{
+		"message": "Keypoint image uploaded successfully",
+		"photoURL": photoURL,
+		"keypointId": keypointID,
+	})
+}
+
+func (h *KeypointHandler) uploadKeypointImageToService(file io.Reader, filename string, keypointId int, tourId int) (string, error) {
+	var body bytes.Buffer
+	writer := multipart.NewWriter(&body)
+
+	part, err := writer.CreateFormFile("image", filepath.Base(filename))
+	if err != nil {
+		return "", fmt.Errorf("failed to create form file: %w", err)
+	}
+
+	if _, err = io.Copy(part, file); err != nil {
+		return "", fmt.Errorf("failed to copy file: %w", err)
+	}
+
+	writer.WriteField("keypointId", strconv.Itoa(keypointId))
+	writer.WriteField("tourId", strconv.Itoa(tourId))
+	writer.Close()
+
+	req, err := http.NewRequest(
+		"POST",
+		os.Getenv("IMAGE_SERVICE_URL")+"/api/saveKeypointPhoto",
+		&body,
+	)
+	if err != nil {
+		return "", fmt.Errorf("failed to create request: %w", err)
+	}
+	req.Header.Set("Content-Type", writer.FormDataContentType())
+
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		return "", fmt.Errorf("failed to send request to image service: %w", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK && resp.StatusCode != http.StatusCreated {
+		respBody, _ := io.ReadAll(resp.Body)
+		return "", fmt.Errorf("image service responded with error: %s", string(respBody))
+	}
+
+	var result struct {
+		PhotoURL string `json:"photoURL"`
+	}
+	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
+		return "", fmt.Errorf("failed to decode response from image service: %w", err)
+	}
+
+	return result.PhotoURL, nil
 }
