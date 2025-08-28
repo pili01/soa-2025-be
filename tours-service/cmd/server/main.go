@@ -59,7 +59,6 @@ func main() {
 	TourExecutionHandler := handlers.NewTourExecutionHandler(tourExecutionService, authService)
 
 	router := mux.NewRouter()
-	apiRouter := router.PathPrefix("/api").Subrouter()
 	api := router.PathPrefix("/api").Subrouter()
 
 	// --- Review routes ---
