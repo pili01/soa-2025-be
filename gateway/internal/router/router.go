@@ -80,11 +80,10 @@ func (r *Router) setupRoutes() {
 		api.Any("/stakeholders/*path", r.handleStakeholdersProxyRequest())
 		api.Any("/stakeholder/*path", r.handleStakeholdersProxyRequest())
 
-		api.Any("/follow/*path", r.handleFollowerProxyRequest())
 		toursGroup := api.Group("/tours")
 		{
-			toursGroup.POST("/create", r.handleCreateTour())  // Adapted to use gRPC client
-			toursGroup.GET("/my-tours", r.handleGetMyTours()) // Adapted to use gRPC client
+			toursGroup.POST("/create", r.handleServiceRequest("tours"))
+			toursGroup.GET("/my-tours", r.handleServiceRequest("tours"))
 			toursGroup.GET("/:tourId", r.handleServiceRequest("tours"))
 			toursGroup.GET("/:tourId/get-published", r.handleServiceRequest("tours"))
 			toursGroup.PUT("/:tourId", r.handleServiceRequest("tours"))
@@ -101,10 +100,19 @@ func (r *Router) setupRoutes() {
 
 			toursGroup.POST("/reviews", r.handleServiceRequest("tours"))
 			toursGroup.GET("/:tourId/reviews", r.handleServiceRequest("tours"))
-			
+
 			toursGroup.POST("/execution/start/:tour_id", r.handleServiceRequest("tours"))
 			toursGroup.POST("/execution/abort/:tour_id", r.handleServiceRequest("tours"))
 			toursGroup.POST("/execution/is-keypoint-reached/:tour_id", r.handleServiceRequest("tours"))
+
+			// Purchase service routes
+			api.Any("/cart", r.handlePurchaseProxyRequest())
+			api.Any("/cart/*path", r.handlePurchaseProxyRequest())
+			api.Any("/checkout", r.handlePurchaseProxyRequest())
+			api.Any("/checkout/*path", r.handlePurchaseProxyRequest())
+			api.Any("/purchases", r.handlePurchaseProxyRequest())
+			api.Any("/purchases/*path", r.handlePurchaseProxyRequest())
+			api.Any("/validate-token", r.handlePurchaseProxyRequest())
 		}
 	}
 
@@ -207,6 +215,61 @@ func (r *Router) handleGetMyTours() gin.HandlerFunc {
 		if err != nil {
 			log.Error().Err(err).Msg("Failed to call GetToursByAuthorID via gRPC")
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to retrieve tours"})
+			return
+		}
+
+		c.JSON(http.StatusOK, resp)
+	}
+}
+
+func (r *Router) handleGetTourByID() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		tourIDStr := c.Param("tourId")
+		tourID, err := strconv.Atoi(tourIDStr)
+		if err != nil {
+			log.Error().Err(err).Msg("Invalid tour ID format")
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid tour ID format"})
+			return
+		}
+
+		req := &pb.GetTourByIDRequest{
+			TourId: int32(tourID),
+		}
+
+		resp, err := r.toursClient.GetTourByID(c, req)
+		if err != nil {
+			log.Error().Err(err).Msg("Failed to call GetTourByID via gRPC")
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to retrieve tour"})
+			return
+		}
+
+		c.JSON(http.StatusOK, resp)
+	}
+}
+
+func (r *Router) handleSetTourPrice() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		tourIDStr := c.Param("tourId")
+		tourID, err := strconv.Atoi(tourIDStr)
+		if err != nil {
+			log.Error().Err(err).Msg("Invalid tour ID format for SetTourPrice")
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid tour ID format"})
+			return
+		}
+
+		var reqBody pb.SetTourPriceRequest
+		if err := c.ShouldBindJSON(&reqBody); err != nil {
+			log.Error().Err(err).Msg("Invalid request body for SetTourPrice")
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request body", "details": err.Error()})
+			return
+		}
+
+		reqBody.TourId = int32(tourID)
+
+		resp, err := r.toursClient.SetTourPrice(c, &reqBody)
+		if err != nil {
+			log.Error().Err(err).Msg("Failed to call SetTourPrice via gRPC")
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to set tour price"})
 			return
 		}
 
@@ -340,12 +403,39 @@ func (r *Router) handleImageProxyRequest() gin.HandlerFunc {
 	}
 }
 
+func (r *Router) handlePurchaseProxyRequest() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		serviceProxy, exists := r.serviceRegistry.GetService("purchase")
+		if !exists {
+			log.Error().Str("service", "purchase").Msg("Purchase service not found")
+			c.JSON(http.StatusServiceUnavailable, gin.H{"error": "Purchase service not available"})
+			c.Abort()
+			return
+		}
+
+		originalPath := c.Request.URL.Path
+		// Putanja u gateway-u je /api/cart/*path, a servis ocekuje /cart/*path
+		newPath := strings.TrimPrefix(originalPath, "/api")
+		c.Request.URL.Path = newPath
+
+		// Prosleđujemo sve header-e, uključujući Authorization
+		log.Debug().
+			Str("original_path", originalPath).
+			Str("new_path", c.Request.URL.Path).
+			Str("authorization", c.Request.Header.Get("Authorization")).
+			Msg("Routing purchase request")
+
+		serviceProxy.ServeHTTP(c.Writer, c.Request)
+	}
+}
+
 func registerServices(registry *proxy.ServiceRegistry, services config.ServicesConfig) error {
 	serviceMappings := map[string]string{
 		"blog":         services.Blog,
 		"image":        services.Image,
 		"stakeholders": services.Stakeholders,
 		"tours":        services.Tours,
+		"purchase":     services.Purchase,
 		"follower":     services.Follower,
 	}
 

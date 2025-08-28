@@ -27,6 +27,7 @@ type ServicesConfig struct {
 	Tours        string
 	ToursAPI     string
 	Follower     string
+	Purchase     string
 }
 
 type AuthConfig struct {
@@ -68,6 +69,7 @@ func Load() (*Config, error) {
 			Follower:     getEnv("FOLLOWER_SERVICE_URL", "http://follower-service:8083"),
 			Tours:        getEnv("TOURS_SERVICE_GRPC_URL", "tours-service:50051"),
 			ToursAPI:     getEnv("TOURS_SERVICE_API_URL", "http://tours-service:8081"),
+			Purchase:     getEnv("PURCHASE_SERVICE_URL", "http://purchase-service:8080"),
 		},
 		Auth: AuthConfig{
 			JWTSecret: getEnv("JWT_SECRET", "your-secret-key"),

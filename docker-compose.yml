@@ -15,6 +15,7 @@ services:
       - FOLLOWER_SERVICE_URL=http://follower-service:8080
       - TOURS_SERVICE_GRPC_URL=tours-service:50051   # RPC
       - TOURS_SERVICE_API_URL=http://tours-service:8080   # REST
+      - PURCHASE_SERVICE_URL=http://purchase-service:8080
       - JWT_SECRET=U1aZEDdXc8r+07B7Ez9eBl8Yec3H1oD06rGecIuhV4k=
     depends_on:
       - blog-service
@@ -22,6 +23,7 @@ services:
       - stakeholders-service
       - tours-service
       - follower-service
+      - purchase-service
     networks: [soa-network]
     restart: unless-stopped
 
@@ -184,6 +186,38 @@ services:
       - neo4j-data:/data
     networks: [soa-network]
 
+  purchase-db:
+    image: postgres:17.5
+    container_name: purchase-db
+    env_file:
+      - ./purchase-service/db/.env
+    ports:
+      - "5436:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    volumes:
+      - purchase-db-data:/var/lib/postgresql/data
+      - ./purchase-service/db:/docker-entrypoint-initdb.d
+    networks: [soa-network]
+
+  purchase-service:
+    build:
+      context: ./purchase-service
+      dockerfile: .Dockerfile
+    container_name: purchase-service
+    ports:
+      - "8084:8080"
+    depends_on:
+      - purchase-db
+      - tours-service
+      - stakeholders-service
+    env_file:
+      - ./purchase-service/.env
+    networks: [soa-network]
+
 networks:
   soa-network:
     driver: bridge
@@ -195,3 +229,5 @@ volumes:
   neo4j-data:
 
 
+
+  purchase-db-data:
