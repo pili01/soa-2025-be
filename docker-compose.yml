@@ -209,7 +209,7 @@ services:
       dockerfile: .Dockerfile
     container_name: purchase-service
     ports:
-      - "8083:8080"
+      - "8084:8080"
     depends_on:
       - purchase-db
       - tours-service

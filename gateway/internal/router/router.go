@@ -97,6 +97,22 @@ func (r *Router) setupRoutes() {
 			toursGroup.GET("/keypoints/:keypointId", r.handleServiceRequest("tours"))
 			toursGroup.PUT("/keypoints/:keypointId", r.handleServiceRequest("tours"))
 			toursGroup.DELETE("/keypoints/:keypointId", r.handleServiceRequest("tours"))
+
+			toursGroup.POST("/reviews", r.handleServiceRequest("tours"))
+			toursGroup.GET("/:tourId/reviews", r.handleServiceRequest("tours"))
+
+			toursGroup.POST("/execution/start/:tour_id", r.handleServiceRequest("tours"))
+			toursGroup.POST("/execution/abort/:tour_id", r.handleServiceRequest("tours"))
+			toursGroup.POST("/execution/is-keypoint-reached/:tour_id", r.handleServiceRequest("tours"))
+
+			// Purchase service routes
+			api.Any("/cart", r.handlePurchaseProxyRequest())
+			api.Any("/cart/*path", r.handlePurchaseProxyRequest())
+			api.Any("/checkout", r.handlePurchaseProxyRequest())
+			api.Any("/checkout/*path", r.handlePurchaseProxyRequest())
+			api.Any("/purchases", r.handlePurchaseProxyRequest())
+			api.Any("/purchases/*path", r.handlePurchaseProxyRequest())
+			api.Any("/validate-token", r.handlePurchaseProxyRequest())
 		}
 	}
 
@@ -382,32 +398,6 @@ func (r *Router) handleImageProxyRequest() gin.HandlerFunc {
 		newPath := strings.TrimPrefix(originalPath, "/api/images")
 		finalPath := "/api" + newPath
 		c.Request.URL.Path = finalPath
-
-		serviceProxy.ServeHTTP(c.Writer, c.Request)
-	}
-}
-
-func (r *Router) handlePurchaseProxyRequest() gin.HandlerFunc {
-	return func(c *gin.Context) {
-		serviceProxy, exists := r.serviceRegistry.GetService("purchase")
-		if !exists {
-			log.Error().Str("service", "purchase").Msg("Purchase service not found")
-			c.JSON(http.StatusServiceUnavailable, gin.H{"error": "Purchase service not available"})
-			c.Abort()
-			return
-		}
-
-		originalPath := c.Request.URL.Path
-		// Putanja u gateway-u je /api/cart/*path, a servis ocekuje /cart/*path
-		newPath := strings.TrimPrefix(originalPath, "/api")
-		c.Request.URL.Path = newPath
-
-		// Prosleđujemo sve header-e, uključujući Authorization
-		log.Debug().
-			Str("original_path", originalPath).
-			Str("new_path", c.Request.URL.Path).
-			Str("authorization", c.Request.Header.Get("Authorization")).
-			Msg("Routing purchase request")
 
 		serviceProxy.ServeHTTP(c.Writer, c.Request)
 	}
