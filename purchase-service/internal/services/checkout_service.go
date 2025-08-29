@@ -78,10 +78,8 @@ func (s *CheckoutService) ProcessCheckout(touristID int, request *models.Checkou
 		log.Printf("Error clearing cart: %v", err)
 	}
 
-	err = s.cartRepo.UpdateCartTotal(cart.ID, 0.0)
-	if err != nil {
-		log.Printf("Error resetting cart total: %v", err)
-	}
+	// Ne resetujemo total_price - ostaje kao je bio
+	// err = s.cartRepo.UpdateCartTotal(cart.ID, 0.0)
 
 	return &models.CheckoutResponse{
 		Success: true,

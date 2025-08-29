@@ -87,12 +87,14 @@ func (r *Router) setupRoutes() {
 			toursGroup.POST("/create", r.handleServiceRequest("tours"))
 			toursGroup.GET("/my-tours", r.handleServiceRequest("tours"))
 			toursGroup.GET("/:tourId", r.handleServiceRequest("tours"))
-			toursGroup.GET("/:tourId/get-published", r.handleServiceRequest("tours"))
+			toursGroup.GET("/get-published", r.handleServiceRequest("tours"))
 			toursGroup.PUT("/:tourId", r.handleServiceRequest("tours"))
 			toursGroup.DELETE("/:tourId", r.handleServiceRequest("tours"))
 			toursGroup.POST("/:tourId/publish", r.handleServiceRequest("tours"))
 			toursGroup.POST("/:tourId/archive", r.handleServiceRequest("tours"))
 			toursGroup.POST("/:tourId/set-price", r.handleServiceRequest("tours"))
+			toursGroup.GET("/:tourId/tourist-view", r.handleServiceRequest("tours"))
+			toursGroup.GET("/:tourId/purchased-keypoints", r.handleServiceRequest("tours"))
 
 			toursGroup.POST("/:tourId/create-keypoint", r.handleServiceRequest("tours"))
 			toursGroup.GET("/:tourId/keypoints", r.handleServiceRequest("tours"))
@@ -107,16 +109,17 @@ func (r *Router) setupRoutes() {
 			toursGroup.POST("/execution/start/:tour_id", r.handleServiceRequest("tours"))
 			toursGroup.POST("/execution/abort/:tour_id", r.handleServiceRequest("tours"))
 			toursGroup.POST("/execution/is-keypoint-reached/:tour_id", r.handleServiceRequest("tours"))
-
-			// Purchase service routes
-			api.Any("/cart", r.handlePurchaseProxyRequest())
-			api.Any("/cart/*path", r.handlePurchaseProxyRequest())
-			api.Any("/checkout", r.handlePurchaseProxyRequest())
-			api.Any("/checkout/*path", r.handlePurchaseProxyRequest())
-			api.Any("/purchases", r.handlePurchaseProxyRequest())
-			api.Any("/purchases/*path", r.handlePurchaseProxyRequest())
-			api.Any("/validate-token", r.handlePurchaseProxyRequest())
 		}
+
+		// Purchase service routes - IZVAN toursGroup!
+		api.Any("/cart", r.handlePurchaseProxyRequest())
+		api.Any("/cart/*path", r.handlePurchaseProxyRequest())
+		api.Any("/checkout", r.handlePurchaseProxyRequest())
+		api.Any("/checkout/*path", r.handlePurchaseProxyRequest())
+		api.Any("/purchases", r.handlePurchaseProxyRequest())
+		api.Any("/purchases/*path", r.handlePurchaseProxyRequest())
+		api.Any("/validate-token", r.handlePurchaseProxyRequest())
+		api.Any("/purchase/*path", r.handlePurchaseProxyRequest())
 	}
 
 	r.engine.NoRoute(func(c *gin.Context) {
@@ -428,14 +431,15 @@ func (r *Router) handlePurchaseProxyRequest() gin.HandlerFunc {
 		}
 
 		originalPath := c.Request.URL.Path
-		// Putanja u gateway-u je /api/cart/*path, a servis ocekuje /cart/*path
-		newPath := strings.TrimPrefix(originalPath, "/api")
+		// Putanja u gateway-u je /api/purchase/*path, a servis ocekuje /*path
+		newPath := strings.TrimPrefix(originalPath, "/api/purchase")
 		c.Request.URL.Path = newPath
 
 		// Prosleđujemo sve header-e, uključujući Authorization
-		log.Debug().
+		log.Info().
 			Str("original_path", originalPath).
 			Str("new_path", c.Request.URL.Path).
+			Str("method", c.Request.Method).
 			Str("authorization", c.Request.Header.Get("Authorization")).
 			Msg("Routing purchase request")
 

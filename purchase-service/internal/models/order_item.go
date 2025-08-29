@@ -18,7 +18,7 @@ type AddToCartRequest struct {
 	TourID    int     `json:"tour_id" validate:"required"`
 	TourName  string  `json:"tour_name" validate:"required"`
 	Price     float64 `json:"price" validate:"required,min=0"`
-	Quantity  int     `json:"quantity" validate:"required,min=1"`
+	Quantity  int     `json:"quantity"` // ✅ Nije obavezno jer se uvek postavlja na 1
 }
 
 type RemoveFromCartRequest struct {

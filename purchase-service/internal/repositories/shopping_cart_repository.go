@@ -18,13 +18,13 @@ func NewShoppingCartRepository(db *db.Database) *ShoppingCartRepository {
 
 func (r *ShoppingCartRepository) CreateCart(touristID int) (*models.ShoppingCart, error) {
 	query := `
-		INSERT INTO shopping_carts (tourist_id, total_price, created_at, updated_at)
-		VALUES ($1, $2, $3, $4)
+		INSERT INTO shopping_carts (tourist_id, created_at, updated_at)
+		VALUES ($1, $2, $3)
 		RETURNING id, tourist_id, total_price, created_at, updated_at`
 
 	now := time.Now()
 	cart := &models.ShoppingCart{}
-	err := r.db.DB.QueryRow(query, touristID, 0.0, now, now).Scan(
+	err := r.db.DB.QueryRow(query, touristID, now, now).Scan(
 		&cart.ID, &cart.TouristID, &cart.TotalPrice, &cart.CreatedAt, &cart.UpdatedAt)
 
 	if err != nil {

@@ -54,7 +54,7 @@ func main() {
 	tourExecutionService := services.NewTourExecutionService(tourExecutionRepo, tourService, keypointService)
 
 	// --- HTTP Handlers ---
-	tourHandler := handlers.NewTourHandler(tourService, authService)
+	tourHandler := handlers.NewTourHandler(tourService, keypointService, tourReviewService, authService)
 	keypointHandler := handlers.NewKeypointHandler(keypointService, tourService, authService)
 	reviewHandler := handlers.NewTourReviewHandler(tourReviewService, tourService, authService)
 	TourExecutionHandler := handlers.NewTourExecutionHandler(tourExecutionService, authService, purchaseService)
@@ -69,13 +69,15 @@ func main() {
 	// --- Tour routes ---
 	api.HandleFunc("/create", tourHandler.CreateTour).Methods("POST")
 	api.HandleFunc("/my-tours", tourHandler.GetToursByAuthor).Methods("GET")
+	api.HandleFunc("/get-published", tourHandler.GetPublishedToursWithFirstKeypoint).Methods("GET")
 	api.HandleFunc("/{tourId}", tourHandler.GetTourByID).Methods("GET")
 	api.HandleFunc("/{tourId}", tourHandler.UpdateTour).Methods("PUT")
 	api.HandleFunc("/{tourId}", tourHandler.DeleteTour).Methods("DELETE")
 	api.HandleFunc("/{tourId}/publish", tourHandler.PublishTour).Methods("POST")
 	api.HandleFunc("/{tourId}/archive", tourHandler.ArchiveTour).Methods("POST")
 	api.HandleFunc("/{tourId}/set-price", tourHandler.SetTourPrice).Methods("POST")
-	api.HandleFunc("/get-published", tourHandler.GetPublishedToursWithFirstKeypoint).Methods("GET")
+	api.HandleFunc("/{tourId}/tourist-view", tourHandler.GetTourForTourist).Methods("GET")
+	api.HandleFunc("/{tourId}/purchased-keypoints", tourHandler.GetPurchasedKeypoints).Methods("GET")
 
 	// --- Keypoint routes ---
 	api.HandleFunc("/{tourId}/create-keypoint", keypointHandler.CreateKeypoint).Methods("POST")

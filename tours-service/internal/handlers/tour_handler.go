@@ -11,14 +11,18 @@ import (
 )
 
 type TourHandler struct {
-	tourService *services.TourService
-	authService *services.AuthService
+	tourService      *services.TourService
+	keypointService  *services.KeypointService
+	reviewService    *services.TourReviewService
+	authService      *services.AuthService
 }
 
-func NewTourHandler(tourService *services.TourService, authService *services.AuthService) *TourHandler {
+func NewTourHandler(tourService *services.TourService, keypointService *services.KeypointService, reviewService *services.TourReviewService, authService *services.AuthService) *TourHandler {
 	return &TourHandler{
-		tourService: tourService,
-		authService: authService,
+		tourService:      tourService,
+		keypointService:  keypointService,
+		reviewService:    reviewService,
+		authService:      authService,
 	}
 }
 
@@ -335,4 +339,141 @@ func (h *TourHandler) ArchiveTour(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(map[string]string{
 		"message": "Tour archived successfully",
 	})
+}
+
+// GetTourForTourist returns tour information for tourists (without all keypoints)
+func (h *TourHandler) GetTourForTourist(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	tourIDStr := vars["tourId"]
+
+	tourID, err := strconv.Atoi(tourIDStr)
+	if err != nil {
+		http.Error(w, "Invalid tour ID", http.StatusBadRequest)
+		return
+	}
+
+	// Get tour details
+	tour, err := h.tourService.GetTourByID(tourID)
+	if err != nil {
+		if strings.Contains(err.Error(), "not found") {
+			http.Error(w, "Tour not found", http.StatusNotFound)
+		} else {
+			http.Error(w, "Failed to retrieve tour", http.StatusInternalServerError)
+		}
+		return
+	}
+
+	// Check if tour is published
+	if tour.Status != models.StatusPublished {
+		http.Error(w, "Tour is not published", http.StatusNotFound)
+		return
+	}
+
+	// Get first keypoint only
+	keypoints, err := h.keypointService.GetKeypointsByTourID(tourID)
+	if err != nil {
+		http.Error(w, "Failed to retrieve keypoints", http.StatusInternalServerError)
+		return
+	}
+
+	var firstKeypoint *models.Keypoint
+	if len(keypoints) > 0 {
+		firstKeypoint = &keypoints[0]
+	}
+
+	// Get reviews for the tour
+	reviews, err := h.reviewService.GetReviewsByTourID(tourID)
+	if err != nil {
+		http.Error(w, "Failed to retrieve reviews", http.StatusInternalServerError)
+		return
+	}
+
+	// Create response with tour info and first keypoint only
+	response := map[string]interface{}{
+		"tour": map[string]interface{}{
+			"id":          tour.ID,
+			"name":        tour.Name,
+			"description": tour.Description,
+			"difficulty":  tour.Difficulty,
+			"tags":        tour.Tags,
+			"price":       tour.Price,
+			"status":      tour.Status,
+			"drivingStats": tour.DrivingStats,
+			"walkingStats": tour.WalkingStats,
+			"cyclingStats": tour.CyclingStats,
+		},
+		"firstKeypoint": firstKeypoint,
+		"reviews":       reviews,
+		"message":       "Tour information for tourists (first keypoint only)",
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(response)
+}
+
+// GetPurchasedKeypoints returns all keypoints for a tour that has been purchased
+func (h *TourHandler) GetPurchasedKeypoints(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	tourIDStr := vars["tourId"]
+
+	tourID, err := strconv.Atoi(tourIDStr)
+	if err != nil {
+		http.Error(w, "Invalid tour ID", http.StatusBadRequest)
+		return
+	}
+
+	// Get tour details
+	tour, err := h.tourService.GetTourByID(tourID)
+	if err != nil {
+		if strings.Contains(err.Error(), "not found") {
+			http.Error(w, "Tour not found", http.StatusNotFound)
+		} else {
+			http.Error(w, "Failed to retrieve tour", http.StatusInternalServerError)
+		}
+		return
+	}
+
+	// Check if tour is published
+	if tour.Status != "Published" {
+		http.Error(w, "Tour is not published", http.StatusNotFound)
+		return
+	}
+
+	// Get all keypoints for the tour
+	keypoints, err := h.keypointService.GetKeypointsByTourID(tourID)
+	if err != nil {
+		http.Error(w, "Failed to retrieve keypoints", http.StatusInternalServerError)
+		return
+	}
+
+	// Get reviews for the tour
+	reviews, err := h.reviewService.GetReviewsByTourID(tourID)
+	if err != nil {
+		http.Error(w, "Failed to retrieve reviews", http.StatusInternalServerError)
+		return
+	}
+
+	// Create response with all keypoints
+	response := map[string]interface{}{
+		"tour": map[string]interface{}{
+			"id":          tour.ID,
+			"name":        tour.Name,
+			"description": tour.Description,
+			"difficulty":  tour.Difficulty,
+			"tags":        tour.Tags,
+			"price":       tour.Price,
+			"status":      tour.Status,
+			"drivingStats": tour.DrivingStats,
+			"walkingStats": tour.WalkingStats,
+			"cyclingStats": tour.CyclingStats,
+		},
+		"keypoints": keypoints,
+		"reviews":   reviews,
+		"message":   "All keypoints for purchased tour",
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(response)
 }

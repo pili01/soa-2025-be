@@ -2,6 +2,7 @@ package services
 
 import (
 	"errors"
+	"fmt"
 
 	"purchase-service/internal/models"
 	"purchase-service/internal/repositories"
@@ -42,19 +43,29 @@ func (s *CartService) AddToCart(touristID int, request *models.AddToCartRequest)
 		return err
 	}
 
+	existingItems, err := s.itemRepo.GetItemsByCartID(cart.ID)
+	if err != nil {
+		return err
+	}
+
+	for _, item := range existingItems {
+		if item.TourID == request.TourID {
+			return errors.New("Tour already exists in cart")
+		}
+	}
+
 	item := &models.OrderItem{
 		CartID:   cart.ID,
 		TourID:   request.TourID,
-		TourName: request.TourName, // Ovo će se proslijediti iz request-a
-		Price:    request.Price,    // Ovo će se proslijediti iz request-a
-		Quantity: request.Quantity,
+		TourName: request.TourName,
+		Price:    request.Price,
+		Quantity: 1,
 	}
 
 	err = s.itemRepo.AddItem(item)
 	if err != nil {
 		return err
 	}
-
 
 	return s.updateCartTotal(cart.ID)
 }
@@ -101,10 +112,35 @@ func (s *CartService) GetCart(touristID int) (*models.ShoppingCartResponse, erro
 		return nil, err
 	}
 
+	// Dodaj logging da vidimo šta se čita iz baze
+	var dbTotal float64
+	if cart.TotalPrice.Valid {
+		dbTotal = cart.TotalPrice.Float64
+	}
+	fmt.Printf("GetCart: Cart %d from DB - TotalPrice: %.2f (valid: %v), Items count: %d\n", cart.ID, dbTotal, cart.TotalPrice.Valid, len(items))
+	for i, item := range items {
+		fmt.Printf("  Item %d: TourID=%d, Price=%.2f, Quantity=%d\n", i+1, item.TourID, item.Price, item.Quantity)
+	}
+
+	// Računaj total iz item-a da vidimo da li se poklapa sa onim iz baze
+	var calculatedTotal float64
+	for _, item := range items {
+		calculatedTotal += item.Price
+	}
+	fmt.Printf("GetCart: Calculated total from items: %.2f, DB total: %.2f (valid: %v)\n", calculatedTotal, dbTotal, cart.TotalPrice.Valid)
+
+	// Koristi calculated total umesto DB total ako DB total nije valid
+	var responseTotal float64
+	if cart.TotalPrice.Valid {
+		responseTotal = cart.TotalPrice.Float64
+	} else {
+		responseTotal = calculatedTotal
+	}
+
 	return &models.ShoppingCartResponse{
 		ID:         cart.ID,
 		TouristID:  cart.TouristID,
-		TotalPrice: cart.TotalPrice,
+		TotalPrice: responseTotal,
 		Items:      items,
 		CreatedAt:  cart.CreatedAt,
 		UpdatedAt:  cart.UpdatedAt,
@@ -119,10 +155,23 @@ func (s *CartService) updateCartTotal(cartID int) error {
 
 	var total float64
 	for _, item := range items {
-		total += item.Price * float64(item.Quantity)
+		total += item.Price
 	}
 
-	return s.cartRepo.UpdateCartTotal(cartID, total)
+	// Dodaj logging da vidimo šta se računa
+	fmt.Printf("Updating cart %d total price to: %.2f (items count: %d)\n", cartID, total, len(items))
+	for i, item := range items {
+		fmt.Printf("  Item %d: TourID=%d, Price=%.2f, Quantity=%d\n", i+1, item.TourID, item.Price, item.Quantity)
+	}
+
+	err = s.cartRepo.UpdateCartTotal(cartID, total)
+	if err != nil {
+		fmt.Printf("Error updating cart total: %v\n", err)
+		return err
+	}
+
+	fmt.Printf("Successfully updated cart %d total price to: %.2f\n", cartID, total)
+	return nil
 }
 
 

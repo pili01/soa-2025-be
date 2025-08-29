@@ -2,7 +2,7 @@
 CREATE TABLE IF NOT EXISTS shopping_carts (
     id SERIAL PRIMARY KEY,
     tourist_id INTEGER NOT NULL,
-    total_price DECIMAL(10,2) DEFAULT 0,
+    total_price DECIMAL(10,2) DEFAULT NULL,
     created_at TIMESTAMP DEFAULT NOW(),
     updated_at TIMESTAMP DEFAULT NOW()
 );
