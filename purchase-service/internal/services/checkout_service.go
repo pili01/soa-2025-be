@@ -2,29 +2,31 @@ package services
 
 import (
 	"errors"
+	"fmt"
 	"log"
 
 	"purchase-service/internal/models"
 	"purchase-service/internal/repositories"
+
 	"github.com/google/uuid"
 )
 
 type CheckoutService struct {
-	cartRepo      *repositories.ShoppingCartRepository
-	itemRepo      *repositories.OrderItemRepository
-	tokenRepo     *repositories.TourPurchaseTokenRepository
+	cartRepo  *repositories.ShoppingCartRepository
+	itemRepo  *repositories.OrderItemRepository
+	tokenRepo *repositories.TourPurchaseTokenRepository
 }
 
 func NewCheckoutService(cartRepo *repositories.ShoppingCartRepository, itemRepo *repositories.OrderItemRepository, tokenRepo *repositories.TourPurchaseTokenRepository) *CheckoutService {
 	return &CheckoutService{
-		cartRepo:    cartRepo,
-		itemRepo:    itemRepo,
-		tokenRepo:   tokenRepo,
+		cartRepo:  cartRepo,
+		itemRepo:  itemRepo,
+		tokenRepo: tokenRepo,
 	}
 }
 
 func (s *CheckoutService) ProcessCheckout(touristID int, request *models.CheckoutRequest) (*models.CheckoutResponse, error) {
-	
+
 	cart, err := s.cartRepo.GetCartByTouristID(touristID)
 	if err != nil {
 		return nil, err
@@ -34,11 +36,12 @@ func (s *CheckoutService) ProcessCheckout(touristID int, request *models.Checkou
 		return nil, errors.New("cart not found")
 	}
 
+	fmt.Println("Cart ID:", cart.ID)
+	fmt.Println("Request Cart ID:", request.CartID)
 	if cart.ID != request.CartID {
 		return nil, errors.New("unauthorized cart access")
 	}
 
-	
 	items, err := s.itemRepo.GetItemsByCartID(cart.ID)
 	if err != nil {
 		return nil, err
@@ -48,7 +51,6 @@ func (s *CheckoutService) ProcessCheckout(touristID int, request *models.Checkou
 		return nil, errors.New("cart is empty")
 	}
 
-	
 	var tokens []models.TourPurchaseToken
 	for _, item := range items {
 		tokenValue := uuid.New().String()
@@ -58,7 +60,6 @@ func (s *CheckoutService) ProcessCheckout(touristID int, request *models.Checkou
 			Token:     tokenValue,
 		}
 
-	
 		err = s.tokenRepo.CreateToken(token)
 		if err != nil {
 			log.Printf("Error creating token for tour %d: %v", item.TourID, err)
@@ -72,13 +73,11 @@ func (s *CheckoutService) ProcessCheckout(touristID int, request *models.Checkou
 		return nil, errors.New("no tours could be purchased")
 	}
 
-	
 	err = s.itemRepo.ClearCart(cart.ID)
 	if err != nil {
 		log.Printf("Error clearing cart: %v", err)
 	}
 
-	
 	err = s.cartRepo.UpdateCartTotal(cart.ID, 0.0)
 	if err != nil {
 		log.Printf("Error resetting cart total: %v", err)
@@ -105,4 +104,8 @@ func (s *CheckoutService) GetPurchaseHistory(touristID int) (*models.PurchaseHis
 
 func (s *CheckoutService) ValidateToken(tokenValue string, tourID int) (bool, error) {
 	return s.tokenRepo.ValidateToken(tokenValue, tourID)
+}
+
+func (s *CheckoutService) CheckIsPurchased(touristID int, tourID int) (bool, error) {
+	return s.tokenRepo.CheckIsPurchased(touristID, tourID)
 }

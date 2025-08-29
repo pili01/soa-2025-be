@@ -3,10 +3,10 @@ package handlers
 import (
 	"encoding/json"
 	"net/http"
-	"strconv"
-	"github.com/gorilla/mux"
 	"stakeholders-service/internal/models"
 	repository "stakeholders-service/internal/repositories"
+	"stakeholders-service/internal/utils"
+	"strings"
 )
 
 type PositionHandler struct {
@@ -37,16 +37,29 @@ func (h *PositionHandler) CreatePosition(w http.ResponseWriter, r *http.Request)
 }
 
 func (h *PositionHandler) GetPosition(w http.ResponseWriter, r *http.Request) {
-	vars := mux.Vars(r)
-	userIdStr := vars["userId"]
-	if userIdStr == "" {
-		http.Error(w, "Missing userId in path", http.StatusBadRequest)
+	authHeader := r.Header.Get("Authorization")
+	if authHeader == "" {
+		http.Error(w, "Authorization header is required", http.StatusUnauthorized)
 		return
 	}
 
-	userId, err := strconv.Atoi(userIdStr)
+	tokenParts := strings.Split(authHeader, " ")
+	if len(tokenParts) != 2 || tokenParts[0] != "Bearer" {
+		http.Error(w, "Authorization header format must be Bearer {token}", http.StatusUnauthorized)
+		return
+	}
+	tokenString := tokenParts[1]
+
+	claims, err := utils.ValidateToken(tokenString)
 	if err != nil {
-		http.Error(w, "Invalid userId format", http.StatusBadRequest)
+		http.Error(w, "Invalid or expired token", http.StatusUnauthorized)
+		return
+	}
+
+	userId := claims.ID
+
+	if claims.Role != "Tourist" {
+		http.Error(w, "Forbidden", http.StatusForbidden)
 		return
 	}
 

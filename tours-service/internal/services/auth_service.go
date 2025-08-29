@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"net/http"
 	"os"
-	"strconv"
 	"tours-service/internal/models"
 )
 
@@ -52,13 +51,14 @@ func (s *AuthService) ValidateAndGetUserID(r *http.Request, role string) (int, e
 	return validationResp.UserID, nil
 }
 
-func (s *AuthService) GetMyPosition(r *http.Request, userId int) (float64, float64, error) {
+func (s *AuthService) GetMyPosition(r *http.Request) (float64, float64, error) {
 	authHeader := r.Header.Get("Authorization")
 	if authHeader == "" {
 		return 0, 0, errors.New("authorization header is required")
 	}
 
-	validationURL := os.Getenv("STAKEHOLDERS_SERVICE_URL") + "/api/position/" + strconv.Itoa(userId)
+	validationURL := os.Getenv("STAKEHOLDERS_SERVICE_URL") + "/api/position"
+	fmt.Println("Validation URL:", validationURL)
 	req, err := http.NewRequest("GET", validationURL, nil)
 	if err != nil {
 		return 0, 0, errors.New("failed to create position request")
@@ -68,23 +68,23 @@ func (s *AuthService) GetMyPosition(r *http.Request, userId int) (float64, float
 	client := &http.Client{}
 	resp, err := client.Do(req)
 	if err != nil {
-		return 0, 0, errors.New("failed to contact authentication service")
+		return 0, 0, errors.New("failed to contact position service")
 	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
 		var errorBody bytes.Buffer
 		errorBody.ReadFrom(resp.Body)
-		return 0, 0, fmt.Errorf("unauthorized: %s", errorBody.String())
+		return 0, 0, fmt.Errorf("bad request: %s", errorBody.String())
 	}
 
-	var validationResp = struct {
+	var respData = struct {
 		Longitude float64 `json:"longitude"`
 		Latitude  float64 `json:"latitude"`
 	}{}
-	if err := json.NewDecoder(resp.Body).Decode(&validationResp); err != nil {
+	if err := json.NewDecoder(resp.Body).Decode(&respData); err != nil {
 		return 0, 0, errors.New("failed to decode validation response")
 	}
 
-	return validationResp.Longitude, validationResp.Latitude, nil
+	return respData.Longitude, respData.Latitude, nil
 }

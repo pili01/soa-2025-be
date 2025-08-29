@@ -84,3 +84,17 @@ func (r *TourPurchaseTokenRepository) ValidateToken(tokenValue string, tourID in
 
 	return count > 0, nil
 }
+
+func (r *TourPurchaseTokenRepository) CheckIsPurchased(touristID int, tourID int) (bool, error) {
+	query := `
+		SELECT COUNT(*) FROM tour_purchase_tokens
+		WHERE tourist_id = $1 AND tour_id = $2`
+
+	var count int
+	err := r.db.DB.QueryRow(query, touristID, tourID).Scan(&count)
+	if err != nil {
+		return false, err
+	}
+
+	return count > 0, nil
+}

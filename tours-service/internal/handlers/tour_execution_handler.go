@@ -14,12 +14,14 @@ import (
 type TourExecutionHandler struct {
 	tourExecutionService *services.TourExecutionService
 	authService          *services.AuthService
+	purchaseService      *services.PurchaseService
 }
 
-func NewTourExecutionHandler(tourExecutionService *services.TourExecutionService, authService *services.AuthService) *TourExecutionHandler {
+func NewTourExecutionHandler(tourExecutionService *services.TourExecutionService, authService *services.AuthService, purchaseService *services.PurchaseService) *TourExecutionHandler {
 	return &TourExecutionHandler{
 		tourExecutionService: tourExecutionService,
 		authService:          authService,
+		purchaseService:      purchaseService,
 	}
 }
 
@@ -34,6 +36,15 @@ func (h *TourExecutionHandler) StartTourExecution(w http.ResponseWriter, r *http
 	tourID, err := strconv.Atoi(tourIDStr)
 	if err != nil {
 		http.Error(w, "Invalid or missing tour_id", http.StatusBadRequest)
+		return
+	}
+	isPurchased, err := h.purchaseService.IsTourPurchasedByMe(r, tourID)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	if !isPurchased {
+		http.Error(w, "You must purchase the tour before starting it", http.StatusForbidden)
 		return
 	}
 	tourId, httpStatus, err := h.tourExecutionService.StartTour(userID, tourID)
@@ -83,7 +94,7 @@ func (h *TourExecutionHandler) CheckIsKeyPointReached(w http.ResponseWriter, r *
 		http.Error(w, err.Error(), http.StatusUnauthorized)
 		return
 	}
-	long, lat, err := h.authService.GetMyPosition(r, userId)
+	long, lat, err := h.authService.GetMyPosition(r)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return

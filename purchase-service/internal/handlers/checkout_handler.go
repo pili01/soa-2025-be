@@ -7,6 +7,8 @@ import (
 
 	"purchase-service/internal/models"
 	"purchase-service/internal/services"
+
+	"github.com/gorilla/mux"
 )
 
 type CheckoutHandler struct {
@@ -68,7 +70,6 @@ func (h *CheckoutHandler) ValidateToken(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	
 	tourIDStr := r.URL.Query().Get("tour_id")
 	token := r.URL.Query().Get("token")
 
@@ -91,8 +92,43 @@ func (h *CheckoutHandler) ValidateToken(w http.ResponseWriter, r *http.Request) 
 
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(map[string]interface{}{
-		"valid": isValid,
-		"tour_id": tourID,
+		"valid":      isValid,
+		"tour_id":    tourID,
+		"tourist_id": touristID,
+	})
+}
+
+func (h *CheckoutHandler) CheckIsPurchased(w http.ResponseWriter, r *http.Request) {
+	touristID, err := h.authService.ValidateAndGetUserID(r, "Tourist")
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusUnauthorized)
+		return
+	}
+
+	vars := mux.Vars(r)
+	tourIDStr := vars["tourId"]
+
+	if tourIDStr == "" {
+		http.Error(w, "Missing tourId parameter", http.StatusBadRequest)
+		return
+	}
+
+	tourID := 0
+	if _, err := fmt.Sscanf(tourIDStr, "%d", &tourID); err != nil {
+		http.Error(w, "Invalid tourId parameter", http.StatusBadRequest)
+		return
+	}
+
+	isPurchased, err := h.checkoutService.CheckIsPurchased(touristID, tourID)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(map[string]interface{}{
+		"purchased":  isPurchased,
+		"tour_id":    tourID,
 		"tourist_id": touristID,
 	})
 }

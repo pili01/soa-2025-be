@@ -39,7 +39,7 @@ func main() {
 	router.HandleFunc("/api/admin/users", userHandler.GetAllUsers).Methods("GET")
 	router.HandleFunc("/api/admin/users/block", userHandler.BlockUser).Methods("PUT")
 
-	router.HandleFunc("/api/position/{userId}", positionHandler.GetPosition).Methods("GET")	
+	router.HandleFunc("/api/position", positionHandler.GetPosition).Methods("GET")
 	router.HandleFunc("/api/position", positionHandler.CreatePosition).Methods("POST")
 
 	go func() {

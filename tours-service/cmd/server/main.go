@@ -50,13 +50,14 @@ func main() {
 	tourReviewService := services.NewTourReviewService(reviewRepo)
 	keypointService := services.NewKeypointService(keypointRepo)
 	authService := services.NewAuthService()
+	purchaseService := services.NewPurchaseService()
 	tourExecutionService := services.NewTourExecutionService(tourExecutionRepo, tourService, keypointService)
 
 	// --- HTTP Handlers ---
 	tourHandler := handlers.NewTourHandler(tourService, authService)
 	keypointHandler := handlers.NewKeypointHandler(keypointService, tourService, authService)
 	reviewHandler := handlers.NewTourReviewHandler(tourReviewService, tourService, authService)
-	TourExecutionHandler := handlers.NewTourExecutionHandler(tourExecutionService, authService)
+	TourExecutionHandler := handlers.NewTourExecutionHandler(tourExecutionService, authService, purchaseService)
 
 	router := mux.NewRouter()
 	api := router.PathPrefix("/api").Subrouter()
