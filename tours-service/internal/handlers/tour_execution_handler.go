@@ -83,6 +83,11 @@ func (h *TourExecutionHandler) CheckIsKeyPointReached(w http.ResponseWriter, r *
 		http.Error(w, err.Error(), http.StatusUnauthorized)
 		return
 	}
+	long, lat, err := h.authService.GetMyPosition(r, userId)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
 	vars := mux.Vars(r)
 	tourIdStr := vars["tour_id"]
 	tourId, err := strconv.Atoi(tourIdStr)
@@ -91,7 +96,6 @@ func (h *TourExecutionHandler) CheckIsKeyPointReached(w http.ResponseWriter, r *
 		return
 	}
 	var keyPoint *models.Keypoint
-	var long, lat float64 = 15, 15
 	httpStatus, keyPoint, finished, err := h.tourExecutionService.CheckIsKeyPointReached(tourId, userId, long, lat)
 	if err != nil {
 		http.Error(w, err.Error(), httpStatus)

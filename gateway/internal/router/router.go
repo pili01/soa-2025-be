@@ -81,6 +81,7 @@ func (r *Router) setupRoutes() {
 		api.Any("/stakeholders/*path", r.handleStakeholdersProxyRequest())
 		api.Any("/stakeholder/*path", r.handleStakeholdersProxyRequest())
 
+		api.Any("/follow/*path", r.handleFollowerProxyRequest())
 		toursGroup := api.Group("/tours")
 		{
 			toursGroup.POST("/create", r.handleServiceRequest("tours"))
