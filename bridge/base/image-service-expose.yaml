@@ -1,0 +1,18 @@
+#! image-service-expose.yaml
+# Generated code, do not edit
+apiVersion: v1
+kind: Service
+metadata:
+    name: image-service
+    namespace: soa-2025-be
+    labels:
+        com.docker.compose.project: soa-2025-be
+        com.docker.compose.service: image-service
+spec:
+    selector:
+        com.docker.compose.project: soa-2025-be
+        com.docker.compose.service: image-service
+    ports:
+        - name: image-serv-3000
+          port: 3000
+          targetPort: image-serv-3000

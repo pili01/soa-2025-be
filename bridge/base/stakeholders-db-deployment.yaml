@@ -1,0 +1,62 @@
+#! stakeholders-db-deployment.yaml
+# Generated code, do not edit
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+    name: stakeholders-db
+    namespace: soa-2025-be
+    labels:
+        com.docker.compose.project: soa-2025-be
+        com.docker.compose.service: stakeholders-db
+spec:
+    replicas: 1
+    selector:
+        matchLabels:
+            com.docker.compose.project: soa-2025-be
+            com.docker.compose.service: stakeholders-db
+    strategy:
+        type: Recreate
+    template:
+        metadata:
+            labels:
+                com.docker.compose.project: soa-2025-be
+                com.docker.compose.service: stakeholders-db
+                com.docker.compose.network.soa-network: "true"
+        spec:
+            containers:
+                - name: stakeholders-db
+                  image: postgres:17.5
+                  imagePullPolicy: IfNotPresent
+                  env:
+                    - name: POSTGRES_DB
+                      value: "stakeholders-service-db"
+                    - name: POSTGRES_PASSWORD
+                      value: "super"
+                    - name: POSTGRES_USER
+                      value: "postgres"
+                  livenessProbe:
+                    exec:
+                        command:
+                            - /bin/sh
+                            - -c
+                            - pg_isready -U $POSTGRES_USER -d $POSTGRES_DB
+                    periodSeconds: 5
+                    timeoutSeconds: 5
+                    failureThreshold: 5
+                  ports:
+                    - name: stakeholde-8080
+                      containerPort: 8080
+                    - name: stakeholde-5432
+                      containerPort: 5432
+                  volumeMounts:
+                    - name: var-lib-postgresql-data
+                      mountPath: /var/lib/postgresql/data
+                    - name: docker-entrypoint-initdb-d
+                      mountPath: /docker-entrypoint-initdb.d
+            volumes:
+                - name: var-lib-postgresql-data
+                  persistentVolumeClaim:
+                    claimName: stakeholders-db-stakeholders-db-data
+                - name: docker-entrypoint-initdb-d
+                  hostPath:
+                    path: C:\Users\nikola.pejanovic\MyProject\soa-2025-be\stakeholders-service\db

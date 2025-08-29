@@ -1,0 +1,21 @@
+#! stakeholders-db-service.yaml
+# Generated code, do not edit
+apiVersion: v1
+kind: Service
+metadata:
+    name: stakeholders-db-published
+    namespace: soa-2025-be
+    labels:
+        com.docker.compose.project: soa-2025-be
+        com.docker.compose.service: stakeholders-db
+spec:
+    selector:
+        com.docker.compose.project: soa-2025-be
+        com.docker.compose.service: stakeholders-db
+    ports:
+        - name: stakeholde-5433
+          port: 5433
+          protocol: TCP
+          targetPort: stakeholde-5432
+
+# check if there is at least one published port

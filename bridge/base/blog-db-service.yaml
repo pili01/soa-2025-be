@@ -1,0 +1,23 @@
+# check if there is at least one published port
+
+#! blog-db-service.yaml
+# Generated code, do not edit
+apiVersion: v1
+kind: Service
+metadata:
+    name: blog-db-published
+    namespace: soa-2025-be
+    labels:
+        com.docker.compose.project: soa-2025-be
+        com.docker.compose.service: blog-db
+spec:
+    selector:
+        com.docker.compose.project: soa-2025-be
+        com.docker.compose.service: blog-db
+    ports:
+        - name: blog-db-5434
+          port: 5434
+          protocol: TCP
+          targetPort: blog-db-5432
+
+# check if there is at least one published port

@@ -1,0 +1,21 @@
+#! stakeholders-db-expose.yaml
+# Generated code, do not edit
+apiVersion: v1
+kind: Service
+metadata:
+    name: stakeholders-db
+    namespace: soa-2025-be
+    labels:
+        com.docker.compose.project: soa-2025-be
+        com.docker.compose.service: stakeholders-db
+spec:
+    selector:
+        com.docker.compose.project: soa-2025-be
+        com.docker.compose.service: stakeholders-db
+    ports:
+        - name: stakeholde-8080
+          port: 8080
+          targetPort: stakeholde-8080
+        - name: stakeholde-5432
+          port: 5432
+          targetPort: stakeholde-5432

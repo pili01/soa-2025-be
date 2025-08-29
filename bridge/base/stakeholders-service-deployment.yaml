@@ -1,0 +1,51 @@
+#! stakeholders-service-deployment.yaml
+# Generated code, do not edit
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+    name: stakeholders-service
+    namespace: soa-2025-be
+    labels:
+        com.docker.compose.project: soa-2025-be
+        com.docker.compose.service: stakeholders-service
+spec:
+    replicas: 1
+    selector:
+        matchLabels:
+            com.docker.compose.project: soa-2025-be
+            com.docker.compose.service: stakeholders-service
+    strategy:
+        type: Recreate
+    template:
+        metadata:
+            labels:
+                com.docker.compose.project: soa-2025-be
+                com.docker.compose.service: stakeholders-service
+                com.docker.compose.network.soa-network: "true"
+        spec:
+            containers:
+                - name: stakeholders-service
+                  image: soa-2025-be-stakeholders-service
+                  imagePullPolicy: IfNotPresent
+                  env:
+                    - name: DB_HOST
+                      value: "stakeholders-db"
+                    - name: DB_NAME
+                      value: "stakeholders-service-db"
+                    - name: DB_PASSWORD
+                      value: "super"
+                    - name: DB_PORT
+                      value: "5432"
+                    - name: DB_USER
+                      value: "postgres"
+                    - name: IMAGE_SERVICE_URL
+                      value: "http://image-service:3000"
+                    - name: JWT_EXPIRATION
+                      value: "60"
+                    - name: JWT_SECRET
+                      value: "U1aZEDdXc8r+07B7Ez9eBl8Yec3H1oD06rGecIuhV4k="
+                    - name: PORT
+                      value: "8080"
+                  ports:
+                    - name: stakeholde-8080
+                      containerPort: 8080

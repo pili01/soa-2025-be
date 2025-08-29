@@ -1,0 +1,24 @@
+#! soa-network-network-policy.yaml
+# Generated code, do not edit
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+    name: soa-network-network-policy
+    namespace: soa-2025-be
+spec:
+    podSelector:
+        matchLabels:
+            com.docker.compose.network.soa-network: "true"
+    policyTypes:
+        - Ingress
+        - Egress
+    ingress:
+        - from:
+            - podSelector:
+                matchLabels:
+                    com.docker.compose.network.soa-network: "true"
+    egress:
+        - to:
+            - podSelector:
+                matchLabels:
+                    com.docker.compose.network.soa-network: "true"

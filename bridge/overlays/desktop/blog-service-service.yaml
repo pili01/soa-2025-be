@@ -1,0 +1,11 @@
+#! blog-service-service.yaml
+# Generated code, do not edit
+apiVersion: v1
+kind: Service
+metadata:
+    name: blog-service-published
+    namespace: soa-2025-be
+spec:
+    type: LoadBalancer
+
+# check if there is at least one published port

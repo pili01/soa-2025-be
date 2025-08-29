@@ -1,0 +1,24 @@
+#! neo4j-expose.yaml
+# Generated code, do not edit
+apiVersion: v1
+kind: Service
+metadata:
+    name: neo4j
+    namespace: soa-2025-be
+    labels:
+        com.docker.compose.project: soa-2025-be
+        com.docker.compose.service: neo4j
+spec:
+    selector:
+        com.docker.compose.project: soa-2025-be
+        com.docker.compose.service: neo4j
+    ports:
+        - name: neo4j-7474
+          port: 7474
+          targetPort: neo4j-7474
+        - name: neo4j-7687
+          port: 7687
+          targetPort: neo4j-7687
+        - name: neo4j-7473
+          port: 7473
+          targetPort: neo4j-7473

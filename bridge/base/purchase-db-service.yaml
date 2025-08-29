@@ -1,0 +1,21 @@
+#! purchase-db-service.yaml
+# Generated code, do not edit
+apiVersion: v1
+kind: Service
+metadata:
+    name: purchase-db-published
+    namespace: soa-2025-be
+    labels:
+        com.docker.compose.project: soa-2025-be
+        com.docker.compose.service: purchase-db
+spec:
+    selector:
+        com.docker.compose.project: soa-2025-be
+        com.docker.compose.service: purchase-db
+    ports:
+        - name: purchase-d-5436
+          port: 5436
+          protocol: TCP
+          targetPort: purchase-d-5432
+
+# check if there is at least one published port

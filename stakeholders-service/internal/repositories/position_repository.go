@@ -14,30 +14,30 @@ func NewPositionRepository(db *sql.DB) *PositionRepository {
 	return &PositionRepository{DB: db}
 }
 
-func (p *PositionRepository) CreatePosition(position *models.Position) error {
-	positionExists, err := p.PositionExists(position.UserId)
-	if err != nil {
-		return fmt.Errorf("failed to check user existence: %w", err)
-	}
+func (p *PositionRepository) CreatePosition(position *models.Position) (*models.Position, error) {
+    exists, err := p.PositionExists(position.UserId)
+    if err != nil {
+        return nil, fmt.Errorf("failed to check user existence: %w", err)
+    }
 
-	if positionExists {
-		return p.UpdatePosition(position)
-	}
+    if exists {
+        err := p.UpdatePosition(position)
+        return position, err
+    }
 
-	query := `INSERT INTO positions (user_id, longitude, latitude) 
-			VALUES ($1, $2, $3) RETURNING id`
+    query := `INSERT INTO positions (user_id, longitude, latitude) 
+              VALUES ($1, $2, $3) RETURNING id`
 
-	err = p.DB.QueryRow(query,
-		position.UserId,
-		position.Longitude,
-		position.Latitude,
-	).Scan(&position.ID)
+    err = p.DB.QueryRow(query,
+        position.UserId,
+        position.Longitude,
+        position.Latitude,
+    ).Scan(&position.ID)
+    if err != nil {
+        return nil, fmt.Errorf("failed to create position of user: %w", err)
+    }
 
-	if err != nil {
-		return fmt.Errorf("failed to create position of user: %w", err)
-	}
-
-	return nil
+    return position, nil
 }
 
 func (p *PositionRepository) GetPositionByUserID(userId int) (*models.Position, error) {

@@ -1,0 +1,9 @@
+#! blog-db-blog-db-data-persistentVolumeClaim.yaml
+# Generated code, do not edit
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+    name: blog-db-blog-db-data
+    namespace: soa-2025-be
+spec:
+    storageClassName: "hostpath" # see docker/desktop-storage-provisioner

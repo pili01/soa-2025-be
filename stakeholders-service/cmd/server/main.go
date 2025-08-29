@@ -26,7 +26,7 @@ func main() {
 	userHandler := handlers.NewUserHandler(userRepo)
 
 	positionRepo := repository.NewPositionRepository(database)
-	positionHandler := handlers.NewPositionHandler(positionRepo)
+	positionHandler := handlers.NewPositionHandler(positionRepo, userRepo)
 
 	router := mux.NewRouter()
 	router.HandleFunc("/api/register", userHandler.RegisterUser).Methods("POST")

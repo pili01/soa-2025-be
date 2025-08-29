@@ -1,0 +1,29 @@
+#! kustomization.yaml
+# Generated code, do not edit
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+    - ../../base
+patches:
+    - path: blog-db-blog-db-data-persistentVolumeClaim.yaml
+    - path: blog-db-service.yaml
+    - path: blog-service-service.yaml
+    - path: follower-service-service.yaml
+    - path: gateway-service.yaml
+    - path: image-service-C:\Users\nikola.pejanovic\MyProject\soa-2025-be\image-service\uploads-persistentVolumeClaim.yaml
+    - path: image-service-service.yaml
+    - path: map-service-service.yaml
+    - path: neo4j-neo4j-data-persistentVolumeClaim.yaml
+    - path: neo4j-service.yaml
+    - path: purchase-db-C:\Users\nikola.pejanovic\MyProject\soa-2025-be\purchase-service\db-persistentVolumeClaim.yaml
+    - path: purchase-db-purchase-db-data-persistentVolumeClaim.yaml
+    - path: purchase-db-service.yaml
+    - path: purchase-service-service.yaml
+    - path: stakeholders-db-C:\Users\nikola.pejanovic\MyProject\soa-2025-be\stakeholders-service\db-persistentVolumeClaim.yaml
+    - path: stakeholders-db-service.yaml
+    - path: stakeholders-db-stakeholders-db-data-persistentVolumeClaim.yaml
+    - path: stakeholders-service-service.yaml
+    - path: tours-db-C:\Users\nikola.pejanovic\MyProject\soa-2025-be\tours-service\db\init.js-persistentVolumeClaim.yaml
+    - path: tours-db-service.yaml
+    - path: tours-db-tours-db-data-persistentVolumeClaim.yaml
+    - path: tours-service-service.yaml
