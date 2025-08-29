@@ -1,0 +1,18 @@
+#! purchase-service-expose.yaml
+# Generated code, do not edit
+apiVersion: v1
+kind: Service
+metadata:
+    name: purchase-service
+    namespace: soa-2025-be
+    labels:
+        com.docker.compose.project: soa-2025-be
+        com.docker.compose.service: purchase-service
+spec:
+    selector:
+        com.docker.compose.project: soa-2025-be
+        com.docker.compose.service: purchase-service
+    ports:
+        - name: purchase-s-8080
+          port: 8080
+          targetPort: purchase-s-8080

@@ -1,0 +1,38 @@
+#! map-service-deployment.yaml
+# Generated code, do not edit
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+    name: map-service
+    namespace: soa-2025-be
+    labels:
+        com.docker.compose.project: soa-2025-be
+        com.docker.compose.service: map-service
+spec:
+    replicas: 1
+    selector:
+        matchLabels:
+            com.docker.compose.project: soa-2025-be
+            com.docker.compose.service: map-service
+    strategy:
+        type: Recreate
+    template:
+        metadata:
+            labels:
+                com.docker.compose.project: soa-2025-be
+                com.docker.compose.service: map-service
+                com.docker.compose.network.soa-network: "true"
+        spec:
+            restartPolicy: unless-stopped
+            containers:
+                - name: map-service
+                  image: soa-2025-be-map-service
+                  imagePullPolicy: IfNotPresent
+                  env:
+                    - name: MAP_API_KEY
+                      value: "eyJvcmciOiI1YjNjZTM1OTc4NTExMTAwMDFjZjYyNDgiLCJpZCI6IjU5MjcyYWNjOTUyNjQzYmFiNDM3NTAwOGEyMmU1YWM0IiwiaCI6Im11cm11cjY0In0="
+                    - name: PORT
+                      value: "3000"
+                  ports:
+                    - name: map-servic-3000
+                      containerPort: 3000

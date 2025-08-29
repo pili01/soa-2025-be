@@ -1,0 +1,21 @@
+#! tours-db-service.yaml
+# Generated code, do not edit
+apiVersion: v1
+kind: Service
+metadata:
+    name: tours-db-published
+    namespace: soa-2025-be
+    labels:
+        com.docker.compose.project: soa-2025-be
+        com.docker.compose.service: tours-db
+spec:
+    selector:
+        com.docker.compose.project: soa-2025-be
+        com.docker.compose.service: tours-db
+    ports:
+        - name: tours-db-5435
+          port: 5435
+          protocol: TCP
+          targetPort: tours-db-27017
+
+# check if there is at least one published port

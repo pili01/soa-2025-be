@@ -1,0 +1,57 @@
+#! tours-service-deployment.yaml
+# Generated code, do not edit
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+    name: tours-service
+    namespace: soa-2025-be
+    labels:
+        com.docker.compose.project: soa-2025-be
+        com.docker.compose.service: tours-service
+spec:
+    replicas: 1
+    selector:
+        matchLabels:
+            com.docker.compose.project: soa-2025-be
+            com.docker.compose.service: tours-service
+    strategy:
+        type: Recreate
+    template:
+        metadata:
+            labels:
+                com.docker.compose.project: soa-2025-be
+                com.docker.compose.service: tours-service
+                com.docker.compose.network.soa-network: "true"
+        spec:
+            containers:
+                - name: tours-service
+                  image: soa-2025-be-tours-service
+                  imagePullPolicy: IfNotPresent
+                  env:
+                    - name: AUTH_DB
+                      value: "admin"
+                    - name: DB_HOST
+                      value: "tours-db"
+                    - name: DB_NAME
+                      value: "tours-service-db"
+                    - name: DB_PASSWORD
+                      value: "super"
+                    - name: DB_PORT
+                      value: "27017"
+                    - name: DB_USER
+                      value: "mongodb"
+                    - name: IMAGE_SERVICE_URL
+                      value: "http://image-service:3000"
+                    - name: MAP_SERVICE_URL
+                      value: "http://map-service:3000"
+                    - name: PORT
+                      value: "8080"
+                    - name: PURCHASE_SERVICE_URL
+                      value: "http://purchase-service:8080"
+                    - name: STAKEHOLDERS_SERVICE_URL
+                      value: "http://stakeholders-service:8080"
+                  ports:
+                    - name: tours-ser-50051
+                      containerPort: 50051
+                    - name: tours-serv-8080
+                      containerPort: 8080

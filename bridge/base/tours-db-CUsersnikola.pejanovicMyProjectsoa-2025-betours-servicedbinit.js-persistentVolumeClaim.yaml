@@ -1,0 +1,18 @@
+#! tours-db-C:\Users\nikola.pejanovic\MyProject\soa-2025-be\tours-service\db\init.js-persistentVolumeClaim.yaml
+# Generated code, do not edit
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+    name: tours-db-c--users-nikola-pejanovic-myproject-soa-2025-be-tours-service-db-init-js
+    namespace: soa-2025-be
+    labels:
+        com.docker.compose.service: tours-db
+        com.docker.compose.volume: C:\Users\nikola.pejanovic\MyProject\soa-2025-be\tours-service\db\init.js
+spec:
+    accessModes:
+        # TODO would need to check which services use this volume
+        - ReadOnlyMany
+    volumeMode: Filesystem
+    resources:
+        requests:
+            storage: 100Mi

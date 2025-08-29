@@ -1,0 +1,9 @@
+#! image-service-C:\Users\nikola.pejanovic\MyProject\soa-2025-be\image-service\uploads-persistentVolumeClaim.yaml
+# Generated code, do not edit
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+    name: image-service-c--users-nikola-pejanovic-myproject-soa-2025-be-image-service-uploads
+    namespace: soa-2025-be
+spec:
+    storageClassName: "hostpath" # see docker/desktop-storage-provisioner

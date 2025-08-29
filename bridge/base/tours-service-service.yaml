@@ -1,0 +1,19 @@
+#! tours-service-service.yaml
+# Generated code, do not edit
+apiVersion: v1
+kind: Service
+metadata:
+    name: tours-service-published
+    namespace: soa-2025-be
+    labels:
+        com.docker.compose.project: soa-2025-be
+        com.docker.compose.service: tours-service
+spec:
+    selector:
+        com.docker.compose.project: soa-2025-be
+        com.docker.compose.service: tours-service
+    ports:
+        - name: tours-serv-8082
+          port: 8082
+          protocol: TCP
+          targetPort: tours-serv-8080

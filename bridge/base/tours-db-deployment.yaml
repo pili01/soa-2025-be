@@ -1,0 +1,62 @@
+#! tours-db-deployment.yaml
+# Generated code, do not edit
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+    name: tours-db
+    namespace: soa-2025-be
+    labels:
+        com.docker.compose.project: soa-2025-be
+        com.docker.compose.service: tours-db
+spec:
+    replicas: 1
+    selector:
+        matchLabels:
+            com.docker.compose.project: soa-2025-be
+            com.docker.compose.service: tours-db
+    strategy:
+        type: Recreate
+    template:
+        metadata:
+            labels:
+                com.docker.compose.project: soa-2025-be
+                com.docker.compose.service: tours-db
+                com.docker.compose.network.soa-network: "true"
+        spec:
+            containers:
+                - name: tours-db
+                  image: mongo:8.0
+                  imagePullPolicy: IfNotPresent
+                  env:
+                    - name: MONGO_INITDB_DATABASE
+                      value: "tours-service-db"
+                    - name: MONGO_INITDB_ROOT_PASSWORD
+                      value: "super"
+                    - name: MONGO_INITDB_ROOT_USERNAME
+                      value: "mongodb"
+                  livenessProbe:
+                    exec:
+                        command:
+                            - /bin/sh
+                            - -c
+                            - mongosh --eval 'db.adminCommand("ping")'
+                    periodSeconds: 5
+                    timeoutSeconds: 5
+                    failureThreshold: 5
+                  ports:
+                    - name: tours-db-27017
+                      containerPort: 27017
+                  volumeMounts:
+                    - name: data-db
+                      mountPath: /data/db
+                    - name: docker-entrypoint-initdb-d-init-js
+                      mountPath: /docker-entrypoint-initdb.d/init.js
+                      readOnly: true
+            volumes:
+                - name: data-db
+                  persistentVolumeClaim:
+                    claimName: tours-db-tours-db-data
+                - name: docker-entrypoint-initdb-d-init-js
+                  hostPath:
+                    path: C:\Users\nikola.pejanovic\MyProject\soa-2025-be\tours-service\db\init.js
+                  readOnly: true

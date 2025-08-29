@@ -1,0 +1,52 @@
+#! gateway-deployment.yaml
+# Generated code, do not edit
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+    name: gateway
+    namespace: soa-2025-be
+    labels:
+        com.docker.compose.project: soa-2025-be
+        com.docker.compose.service: gateway
+spec:
+    replicas: 1
+    selector:
+        matchLabels:
+            com.docker.compose.project: soa-2025-be
+            com.docker.compose.service: gateway
+    strategy:
+        type: Recreate
+    template:
+        metadata:
+            labels:
+                com.docker.compose.project: soa-2025-be
+                com.docker.compose.service: gateway
+                com.docker.compose.network.soa-network: "true"
+        spec:
+            restartPolicy: unless-stopped
+            containers:
+                - name: soa-gateway
+                  image: soa-2025-be-gateway
+                  imagePullPolicy: IfNotPresent
+                  env:
+                    - name: BLOG_SERVICE_URL
+                      value: "http://blog-service:3000"
+                    - name: FOLLOWER_SERVICE_URL
+                      value: "http://follower-service:8080"
+                    - name: GATEWAY_PORT
+                      value: "8080"
+                    - name: IMAGE_SERVICE_URL
+                      value: "http://image-service:3000"
+                    - name: JWT_SECRET
+                      value: "U1aZEDdXc8r+07B7Ez9eBl8Yec3H1oD06rGecIuhV4k="
+                    - name: PURCHASE_SERVICE_URL
+                      value: "http://purchase-service:8080"
+                    - name: STAKEHOLDERS_SERVICE_URL
+                      value: "http://stakeholders-service:8080"
+                    - name: TOURS_SERVICE_API_URL
+                      value: "http://tours-service:8080"
+                    - name: TOURS_SERVICE_GRPC_URL
+                      value: "tours-service:50051"
+                  ports:
+                    - name: gateway-8080
+                      containerPort: 8080

@@ -1,0 +1,9 @@
+#! stakeholders-db-C:\Users\nikola.pejanovic\MyProject\soa-2025-be\stakeholders-service\db-persistentVolumeClaim.yaml
+# Generated code, do not edit
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+    name: stakeholders-db-c--users-nikola-pejanovic-myproject-soa-2025-be-stakeholders-service-db
+    namespace: soa-2025-be
+spec:
+    storageClassName: "hostpath" # see docker/desktop-storage-provisioner

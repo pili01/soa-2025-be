@@ -1,0 +1,45 @@
+#! image-service-deployment.yaml
+# Generated code, do not edit
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+    name: image-service
+    namespace: soa-2025-be
+    labels:
+        com.docker.compose.project: soa-2025-be
+        com.docker.compose.service: image-service
+spec:
+    replicas: 1
+    selector:
+        matchLabels:
+            com.docker.compose.project: soa-2025-be
+            com.docker.compose.service: image-service
+    strategy:
+        type: Recreate
+    template:
+        metadata:
+            labels:
+                com.docker.compose.project: soa-2025-be
+                com.docker.compose.service: image-service
+                com.docker.compose.network.soa-network: "true"
+        spec:
+            restartPolicy: unless-stopped
+            containers:
+                - name: image-service
+                  image: soa-2025-be-image-service
+                  imagePullPolicy: IfNotPresent
+                  env:
+                    - name: BASE_UPLOAD_URL
+                      value: "http://localhost:3001"
+                    - name: PORT
+                      value: "3000"
+                  ports:
+                    - name: image-serv-3000
+                      containerPort: 3000
+                  volumeMounts:
+                    - name: usr-src-app-uploads
+                      mountPath: /usr/src/app/uploads
+            volumes:
+                - name: usr-src-app-uploads
+                  hostPath:
+                    path: C:\Users\nikola.pejanovic\MyProject\soa-2025-be\image-service\uploads

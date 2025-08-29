@@ -1,0 +1,21 @@
+#! purchase-service-service.yaml
+# Generated code, do not edit
+apiVersion: v1
+kind: Service
+metadata:
+    name: purchase-service-published
+    namespace: soa-2025-be
+    labels:
+        com.docker.compose.project: soa-2025-be
+        com.docker.compose.service: purchase-service
+spec:
+    selector:
+        com.docker.compose.project: soa-2025-be
+        com.docker.compose.service: purchase-service
+    ports:
+        - name: purchase-s-8084
+          port: 8084
+          protocol: TCP
+          targetPort: purchase-s-8080
+
+# check if there is at least one published port

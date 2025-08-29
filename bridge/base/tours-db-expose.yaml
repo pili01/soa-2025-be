@@ -1,0 +1,18 @@
+#! tours-db-expose.yaml
+# Generated code, do not edit
+apiVersion: v1
+kind: Service
+metadata:
+    name: tours-db
+    namespace: soa-2025-be
+    labels:
+        com.docker.compose.project: soa-2025-be
+        com.docker.compose.service: tours-db
+spec:
+    selector:
+        com.docker.compose.project: soa-2025-be
+        com.docker.compose.service: tours-db
+    ports:
+        - name: tours-db-27017
+          port: 27017
+          targetPort: tours-db-27017

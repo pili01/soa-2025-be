@@ -1,0 +1,21 @@
+#! follower-service-service.yaml
+# Generated code, do not edit
+apiVersion: v1
+kind: Service
+metadata:
+    name: follower-service-published
+    namespace: soa-2025-be
+    labels:
+        com.docker.compose.project: soa-2025-be
+        com.docker.compose.service: follower-service
+spec:
+    selector:
+        com.docker.compose.project: soa-2025-be
+        com.docker.compose.service: follower-service
+    ports:
+        - name: follower-s-8083
+          port: 8083
+          protocol: TCP
+          targetPort: follower-s-8080
+
+# check if there is at least one published port

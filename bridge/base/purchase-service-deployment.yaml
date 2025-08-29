@@ -1,0 +1,49 @@
+#! purchase-service-deployment.yaml
+# Generated code, do not edit
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+    name: purchase-service
+    namespace: soa-2025-be
+    labels:
+        com.docker.compose.project: soa-2025-be
+        com.docker.compose.service: purchase-service
+spec:
+    replicas: 1
+    selector:
+        matchLabels:
+            com.docker.compose.project: soa-2025-be
+            com.docker.compose.service: purchase-service
+    strategy:
+        type: Recreate
+    template:
+        metadata:
+            labels:
+                com.docker.compose.project: soa-2025-be
+                com.docker.compose.service: purchase-service
+                com.docker.compose.network.soa-network: "true"
+        spec:
+            containers:
+                - name: purchase-service
+                  image: soa-2025-be-purchase-service
+                  imagePullPolicy: IfNotPresent
+                  env:
+                    - name: DB_HOST
+                      value: "purchase-db"
+                    - name: DB_NAME
+                      value: "purchase_db"
+                    - name: DB_PASSWORD
+                      value: "super"
+                    - name: DB_PORT
+                      value: "5432"
+                    - name: DB_SSLMODE
+                      value: "disable"
+                    - name: DB_USER
+                      value: "postgres"
+                    - name: SERVICE_PORT
+                      value: "8080"
+                    - name: STAKEHOLDERS_SERVICE_URL
+                      value: "http://stakeholders-service:8080"
+                  ports:
+                    - name: purchase-s-8080
+                      containerPort: 8080

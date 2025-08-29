@@ -1,0 +1,8 @@
+#! 0-soa-2025-be-namespace.yaml
+# Generated code, do not edit
+apiVersion: v1
+kind: Namespace
+metadata:
+    name: soa-2025-be
+    labels:
+        com.docker.compose.project: soa-2025-be

@@ -1,0 +1,37 @@
+#! blog-service-deployment.yaml
+# Generated code, do not edit
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+    name: blog-service
+    namespace: soa-2025-be
+    labels:
+        com.docker.compose.project: soa-2025-be
+        com.docker.compose.service: blog-service
+spec:
+    replicas: 1
+    selector:
+        matchLabels:
+            com.docker.compose.project: soa-2025-be
+            com.docker.compose.service: blog-service
+    strategy:
+        type: Recreate
+    template:
+        metadata:
+            labels:
+                com.docker.compose.project: soa-2025-be
+                com.docker.compose.service: blog-service
+                com.docker.compose.network.soa-network: "true"
+        spec:
+            restartPolicy: Always
+            containers:
+                - name: blog-service-app
+                  image: soa-2025-be-blog-service
+                  imagePullPolicy: IfNotPresent
+                  command: [node src/app.js]
+                  env:
+                    - name: DATABASE_URL
+                      value: "postgresql://postgres:super@blog-db:5432/blogSOA?schema=public"
+                  ports:
+                    - name: blog-servi-3000
+                      containerPort: 3000

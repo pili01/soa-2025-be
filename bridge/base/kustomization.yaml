@@ -1,0 +1,55 @@
+#! kustomization.yaml
+# Generated code, do not edit
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+    - 0-soa-2025-be-namespace.yaml
+    - blog-db-blog-db-data-persistentVolumeClaim.yaml
+    - blog-db-deployment.yaml
+    - blog-db-expose.yaml
+    - blog-db-service.yaml
+    - blog-service-deployment.yaml
+    - blog-service-expose.yaml
+    - blog-service-service.yaml
+    - follower-service-deployment.yaml
+    - follower-service-expose.yaml
+    - follower-service-service.yaml
+    - gateway-deployment.yaml
+    - gateway-expose.yaml
+    - gateway-service.yaml
+    - image-service-C:\Users\nikola.pejanovic\MyProject\soa-2025-be\image-service\uploads-persistentVolumeClaim.yaml
+    - image-service-deployment.yaml
+    - image-service-expose.yaml
+    - image-service-service.yaml
+    - map-service-deployment.yaml
+    - map-service-expose.yaml
+    - map-service-service.yaml
+    - neo4j-deployment.yaml
+    - neo4j-expose.yaml
+    - neo4j-neo4j-data-persistentVolumeClaim.yaml
+    - neo4j-service.yaml
+    - purchase-db-C:\Users\nikola.pejanovic\MyProject\soa-2025-be\purchase-service\db-persistentVolumeClaim.yaml
+    - purchase-db-deployment.yaml
+    - purchase-db-expose.yaml
+    - purchase-db-purchase-db-data-persistentVolumeClaim.yaml
+    - purchase-db-service.yaml
+    - purchase-service-deployment.yaml
+    - purchase-service-expose.yaml
+    - purchase-service-service.yaml
+    - soa-network-network-policy.yaml
+    - stakeholders-db-C:\Users\nikola.pejanovic\MyProject\soa-2025-be\stakeholders-service\db-persistentVolumeClaim.yaml
+    - stakeholders-db-deployment.yaml
+    - stakeholders-db-expose.yaml
+    - stakeholders-db-service.yaml
+    - stakeholders-db-stakeholders-db-data-persistentVolumeClaim.yaml
+    - stakeholders-service-deployment.yaml
+    - stakeholders-service-expose.yaml
+    - stakeholders-service-service.yaml
+    - tours-db-C:\Users\nikola.pejanovic\MyProject\soa-2025-be\tours-service\db\init.js-persistentVolumeClaim.yaml
+    - tours-db-deployment.yaml
+    - tours-db-expose.yaml
+    - tours-db-service.yaml
+    - tours-db-tours-db-data-persistentVolumeClaim.yaml
+    - tours-service-deployment.yaml
+    - tours-service-expose.yaml
+    - tours-service-service.yaml
