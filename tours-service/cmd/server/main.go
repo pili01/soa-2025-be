@@ -82,6 +82,7 @@ func main() {
 	api.HandleFunc("/keypoints/{keypointId}", keypointHandler.GetKeypointByID).Methods("GET")
 	api.HandleFunc("/keypoints/{keypointId}", keypointHandler.UpdateKeypoint).Methods("PUT")
 	api.HandleFunc("/keypoints/{keypointId}", keypointHandler.DeleteKeypoint).Methods("DELETE")
+	api.HandleFunc("/keypoints/{keypointId}/upload-image", keypointHandler.UploadKeypointImage).Methods("POST")
 
 	// -- Execution routes --
 	executionRouter := api.PathPrefix("/execution").Subrouter()
