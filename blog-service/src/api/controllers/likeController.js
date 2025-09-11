@@ -12,44 +12,51 @@ exports.create = async (req, res, next) => {
         message: "Forbidden"
       });
     }
-    const likeData = req.body;
-    const blogId = likeData.blogId;
+
+    const { blogId } = req.params;
     if (!blogId) {
       return res.status(400).json({
         success: false,
         message: "Blog ID is required"
       });
     }
-    const blog = await blogService.getBlogById(blogId);
+
+    const blog = await blogService.getBlogById(+blogId);
     if (!blog) {
       return res.status(404).json({
         success: false,
         message: "Blog not found"
       });
     }
-    console.log("Checking if user is followed...");
+
+    const already = await likeService.hasUserLiked(Number(data.userId), Number(blogId));
+    if (already) {
+      return res.status(409).json({ success: false, message: "Already liked" });
+    }
+
     if (!(await followerService.isUserFollowedByMe(req.headers.authorization, blog.userId))) {
       return res.status(403).json({
         success: false,
-        message: "Forbidden: You are not allowed to like this blog, you must follow the author."
+        message: "Forbidden: You must follow the author before liking."
       });
     }
-    likeData.userId = data.userId;
 
+    const likeData = { blogId: Number(blogId), userId: Number(data.userId) };
     const newLike = await likeService.createLike(likeData);
 
     res.status(201).json({
       success: true,
-      message: 'You managed to create new like on blog',
+      message: 'You liked the blog.',
       data: newLike
     });
   } catch (err) {
+    console.error(err);
     res.status(500).json({
       success: false,
-      message: 'An error occurred on the server.',
+      message: 'An error occurred on the server.'
     });
   }
-}
+};
 
 exports.getAllBlogLikes = async (req, res, next) => {
   try {
@@ -58,7 +65,7 @@ exports.getAllBlogLikes = async (req, res, next) => {
       return res.status(400).json({ success: false, message: 'Missing blogId in params.' });
     }
 
-    const likes = await likeService.getAllBlogLikes(+blogId);
+    const likes = await likeService.getAllBlogLikes(Number(blogId));
 
     return res.status(200).json({
       success: true,
@@ -80,7 +87,7 @@ exports.deleteBlogLike = async (req, res, next) => {
       return res.status(400).json({ success: false, message: 'Missing blogId or userId in params.' });
     }
 
-    const deleted = await likeService.delete(+blogId, +userId);
+    const deleted = await likeService.delete(Number(blogId), Number(userId));
     if (!deleted) {
       return res.status(404).json({ success: false, message: 'Like not found for the given blogId/userId.' });
     }
@@ -88,5 +95,70 @@ exports.deleteBlogLike = async (req, res, next) => {
     return res.status(204).send();
   } catch (err) {
     return res.status(500).json({ success: false, message: 'An error occurred on the server.' });
+  }
+};
+
+exports.getMyLikeStatus = async (req, res) => {
+  try {
+    const me = await authService.getMe(req.headers.authorization);
+    if (!me?.userId) return res.status(403).json({ success: false, message: "Forbidden" });
+
+    const blogId = +req.params.blogId;
+    if (!Number.isInteger(blogId) || blogId <= 0)
+      return res.status(400).json({ success: false, message: "Invalid blogId" });
+
+    const [liked, count] = await Promise.all([
+      likeService.hasUserLiked(Number(me.userId), Number(blogId)),
+      likeService.countForBlog(Number(blogId)),
+    ]);
+
+
+    return res.status(200).json({ success: true, data: { liked, count } });
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({ success: false, message: "Server error" });
+  }
+};
+
+
+exports.toggleLike = async (req, res) => {
+  try {
+    const me = await authService.getMe(req.headers.authorization);
+    if (!me?.userId) return res.status(403).json({ success: false, message: "Forbidden" });
+
+    const blogId = +req.params.blogId;
+    if (!Number.isInteger(blogId) || blogId <= 0)
+      return res.status(400).json({ success: false, message: "Invalid blogId" });
+
+    const blog = await blogService.getBlogById(blogId);
+    if (!blog) return res.status(404).json({ success: false, message: "Blog not found" });
+
+    const allowed = await followerService.isUserFollowedByMe(req.headers.authorization, blog.userId);
+    if (!allowed) {
+      return res.status(403).json({
+        success: false,
+        message: "Forbidden: You must follow the author before liking."
+      });
+    }
+
+    const result = await likeService.toggleLike(Number(me.userId), Number(blogId));
+    return res.status(200).json({ success: true, data: result });
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({ success: false, message: "Server error" });
+  }
+};
+
+exports.getBlogLikesCount = async (req, res) => {
+  try {
+    const blogId = +req.params.blogId;
+    if (!Number.isInteger(blogId) || blogId <= 0) {
+      return res.status(400).json({ success: false, message: "Invalid blogId" });
+    }
+    const count = await likeService.countForBlog(Number(blogId));
+    return res.status(200).json({ success: true, data: { count } });
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({ success: false, message: "Server error" });
   }
 };
