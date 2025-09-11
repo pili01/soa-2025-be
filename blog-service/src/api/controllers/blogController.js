@@ -67,3 +67,34 @@ exports.getBlogs = async (req, res) => {
     });
   }
 }
+
+exports.getBlogById = async (req, res) => {
+  try {
+    const raw = req.params.id; 
+    const id = Number.parseInt(raw, 10);
+
+    if (!Number.isInteger(id) || id <= 0) {
+      return res.status(400).json({ success: false, message: 'Invalid blog id.' });
+    }
+
+    const blog = await blogService.getBlogById(id);
+
+    if (!blog) {
+      return res.status(404).json({
+        success: false,
+        message: 'Blog not found.'
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      data: blog
+    });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({
+      success: false,
+      message: 'Došlo je do greške na serveru.'
+    });
+  }
+};
