@@ -30,7 +30,8 @@ router.post('/save-image', upload.single('image'), (req, res) => {
 
     res.status(201).json({
         message: 'Image saved successfully',
-        photoURL: `http://localhost:3001/api/img/${filename}`
+        photoURL: `${filename}`,
+        photoName: `${filename}`
     });
 });
 
@@ -62,7 +63,8 @@ router.post('/saveReviewPhoto', upload.single('image'), (req, res) => {
 
     res.status(201).json({
         message: 'Review image saved successfully',
-        photoURL: `http://localhost:3031/api/images/review/${filename}`  
+        photoURL: `http://localhost:3031/api/images/review/${filename}`,
+        photoName: filename
     });
 });
 
@@ -94,7 +96,8 @@ router.post('/saveKeypointPhoto', upload.single('image'), (req, res) => {
 
     res.status(201).json({
         message: 'Keypoint image saved successfully',
-        photoURL: `http://localhost:3001/api/img/keypoint/${filename}`  
+        photoURL: `http://localhost:3001/api/img/keypoint/${filename}`,
+        photoName: filename
     });
 });
 

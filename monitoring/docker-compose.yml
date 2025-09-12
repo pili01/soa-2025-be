@@ -1,0 +1,56 @@
+services:
+  grafana:
+    image: grafana/grafana:8.5.3
+    ports:
+      - "3300:3000"
+    environment:
+      GF_RENDERING_SERVER_URL: http://renderer:8081/render
+      GF_RENDERING_CALLBACK_URL: http://grafana:3300/
+      GF_LOG_FILTERS: rendering:debug
+    volumes:
+      - grafana:/var/lib/grafana
+      - ./grafana/dashboards:/var/lib/grafana/dashboards
+      - ./grafana/provisioning:/etc/grafana/provisioning
+    networks:
+      - soa-network
+
+  renderer:
+    image: grafana/grafana-image-renderer:3.10.5
+    environment:
+      ENABLE_METRICS: "true"
+    networks:
+      - soa-network
+
+  prometheus:
+    image: prom/prometheus:v2.35.0
+    restart: on-failure
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./prometheus:/etc/prometheus
+      - prometheus:/var/lib/prometheus
+    networks:
+      - soa-network
+
+  cadvisor:
+    image: gcr.io/cadvisor/cadvisor:v0.47.2
+    ports:
+      - "8880:8080"
+    volumes:
+      - /:/rootfs:ro
+      - /var/run:/var/run:rw
+      - /sys:/sys:ro
+      - /var/lib/docker/:/var/lib/docker:ro
+    networks:
+      - soa-network
+
+
+volumes:
+  grafana:
+    name: grafana
+  prometheus:
+    name: prometheus
+
+networks:
+  soa-network:
+    name: soa-network
