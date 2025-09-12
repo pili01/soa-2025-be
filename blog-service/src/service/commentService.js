@@ -7,3 +7,15 @@ exports.createComment = async (commentData) => {
 exports.getCommentsByBlogId = async (blogId) => {
     return await commentRepository.getCommentsByBlogId(blogId);
 }
+
+exports.updateComment = async (commentId, newContent) => {
+    return await commentRepository.updateComment(commentId, newContent);
+}
+
+exports.getCommentById = async (commentId) => {
+    return await commentRepository.getCommentById(commentId);
+}
+
+exports.deleteComment = async (commentId) => {
+    return await commentRepository.deleteComment(commentId);
+}

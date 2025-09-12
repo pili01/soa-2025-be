@@ -35,12 +35,14 @@ model BlogLike {
 }
 
 model BlogComment {
-  id        Int      @id @default(autoincrement())
-  blogId    Int
-  userId    Int
-  content   String
-  createdAt DateTime @default(now()) @map("created_at")
-  blog      Blog     @relation(fields: [blogId], references: [id], onDelete: Cascade)
+  id             Int      @id @default(autoincrement())
+  blogId         Int
+  userId         Int
+  authorUsername String   @map("author_username")
+  content        String
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
+  blog           Blog     @relation(fields: [blogId], references: [id], onDelete: Cascade)
 
   @@index([blogId])
   @@index([userId])
