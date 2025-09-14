@@ -73,6 +73,7 @@ func (r *Router) setupRoutes() {
 		// Koristi novu funkciju koja ne menja putanju za blog servis
 		api.Any("/blogs/*path", r.handleBlogProxyRequest())
 		api.Any("/blog/*path", r.handleBlogProxyRequest())
+		api.Any("/blogs", r.handleBlogProxyRequest())
 
 		api.Any("/images/*path", r.handleImageProxyRequest())
 		api.Any("/image/*path", r.handleImageProxyRequest())
