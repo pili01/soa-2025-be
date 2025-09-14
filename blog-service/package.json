@@ -5,7 +5,9 @@
   "main": "index.js",
   "scripts": {
     "start": "node src/app.js",
-    "dev": "nodemon src/app.js"
+    "dev": "nodemon src/app.js",
+    "generate": "npx prisma generate",
+    "migrate": "npx prisma migrate deploy"
   },
   "keywords": [],
   "author": "",

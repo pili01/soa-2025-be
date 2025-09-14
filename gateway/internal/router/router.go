@@ -55,7 +55,7 @@ func (r *Router) setupMiddleware() {
 	r.engine.Use(middleware.RequestID())
 	r.engine.Use(middleware.Logger())
 	r.engine.Use(middleware.CORS())
-	r.engine.Use(middleware.RateLimit(100))
+	r.engine.Use(middleware.RateLimit(1000))
 
 	r.engine.Use(middleware.JWTAuth(middleware.JWTConfig{
 		Secret: r.config.Auth.JWTSecret,
@@ -402,7 +402,7 @@ func (r *Router) handleImageProxyRequest() gin.HandlerFunc {
 
 		originalPath := c.Request.URL.Path
 		var newPath string
-		
+
 		// Handle different image service paths
 		if strings.HasPrefix(originalPath, "/api/images") {
 			newPath = strings.TrimPrefix(originalPath, "/api/images")
@@ -413,7 +413,7 @@ func (r *Router) handleImageProxyRequest() gin.HandlerFunc {
 		} else {
 			newPath = originalPath
 		}
-		
+
 		finalPath := "/api" + newPath
 		c.Request.URL.Path = finalPath
 

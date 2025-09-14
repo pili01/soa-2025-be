@@ -92,7 +92,6 @@ services:
         condition: service_healthy
     environment:
       DATABASE_URL: "postgresql://postgres:super@blog-db:5432/blogSOA?schema=public"
-    command: ["node", "src/app.js"]
     networks: [soa-network]
 
   tours-db:
