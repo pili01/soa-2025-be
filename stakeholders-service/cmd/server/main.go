@@ -36,6 +36,9 @@ func main() {
 	router.HandleFunc("/api/updateProfile", userHandler.UpdateMyProfile).Methods("PUT")
 	router.HandleFunc("/api/me", userHandler.GetUserFromToken).Methods("GET")
 
+	router.HandleFunc("/api/profile/{id}", userHandler.GetUserProfile).Methods("GET")
+	router.HandleFunc("/api/usersForSearch", userHandler.GetUsersForSearch).Methods("GET")
+
 	router.HandleFunc("/api/admin/users", userHandler.GetAllUsers).Methods("GET")
 	router.HandleFunc("/api/admin/users/block", userHandler.BlockUser).Methods("PUT")
 

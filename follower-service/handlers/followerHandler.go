@@ -67,9 +67,24 @@ func (fh *FollowerHandler) GetFollowers(rw http.ResponseWriter, h *http.Request)
 		return
 	}
 	if len(followers) == 0 {
-		rw.WriteHeader(http.StatusNotFound)
-		rw.Write([]byte("No followers found"))
+		rw.WriteHeader(http.StatusOK)
+		emptyList := []data.User{}
+		json.NewEncoder(rw).Encode(emptyList)
 		return
+	}
+
+	for _, follower := range followers {
+		isFollowed, err := fh.repo.IsFollowedByMe(userID, follower.ID)
+		if err != nil {
+			fh.logger.Print("Database exception: ", err)
+			http.Error(rw, "Database error", http.StatusInternalServerError)
+			return
+		}
+		if len(isFollowed) == 0 {
+			follower.FollowedByMe = false
+			continue
+		}
+		follower.FollowedByMe = true
 	}
 	err = followers.ToJSON(rw)
 	if err != nil {
@@ -132,8 +147,9 @@ func (fh *FollowerHandler) GetFollowed(rw http.ResponseWriter, h *http.Request) 
 		return
 	}
 	if len(followed) == 0 {
-		rw.WriteHeader(http.StatusNotFound)
-		rw.Write([]byte("No followed users found"))
+		rw.WriteHeader(http.StatusOK)
+		emptyList := []data.User{}
+		json.NewEncoder(rw).Encode(emptyList)
 		return
 	}
 	err = followed.ToJSON(rw)
@@ -239,8 +255,9 @@ func (fh *FollowerHandler) GetSuggested(rw http.ResponseWriter, h *http.Request)
 		return
 	}
 	if len(suggested) == 0 {
-		rw.WriteHeader(http.StatusNotFound)
-		rw.Write([]byte("No suggested followers found"))
+		rw.WriteHeader(http.StatusOK)
+		emptyList := []data.User{}
+		json.NewEncoder(rw).Encode(emptyList)
 		return
 	}
 	err = suggested.ToJSON(rw)

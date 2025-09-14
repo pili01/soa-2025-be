@@ -142,6 +142,41 @@ func (r *UserRepository) GetAllUsers() ([]models.User, error) {
 	return users, nil
 }
 
+func (r *UserRepository) GetUsersForSearch() ([]models.User, error) {
+	query := `SELECT id, username, email, role, name, surname, biography, moto FROM users WHERE role NOT IN ('Admin') ORDER BY id`
+
+	rows, err := r.DB.Query(query)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get users: %w", err)
+	}
+	defer rows.Close()
+
+	var users []models.User
+	for rows.Next() {
+		var user models.User
+		err := rows.Scan(
+			&user.ID,
+			&user.Username,
+			&user.Email,
+			&user.Role,
+			&user.Name,
+			&user.Surname,
+			&user.Biography,
+			&user.Moto,
+		)
+		if err != nil {
+			return nil, fmt.Errorf("failed to scan user: %w", err)
+		}
+		users = append(users, user)
+	}
+
+	if err = rows.Err(); err != nil {
+		return nil, fmt.Errorf("error iterating users: %w", err)
+	}
+
+	return users, nil
+}
+
 func (r *UserRepository) GetUserByID(id int) (*models.User, error) {
 	var user models.User
 	query := `SELECT id, username, email, role, name, surname, biography, moto, photo_url, is_blocked FROM users WHERE id = $1`
