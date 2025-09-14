@@ -55,7 +55,8 @@ exports.getBlogs = async (req, res) => {
     const limit = parseInt(req.query.limit) || 10;
 
     const skip = (page - 1) * limit;
-    const followed = await followerService.getFollowedUsers(req.headers.authorization);
+    var followed = await followerService.getFollowedUsers(req.headers.authorization);
+    followed.push({id: (await authService.getMe(req.headers.authorization)).userId});
     console.log('Followed users:', followed.map(user => user.id));
 
     const blogs = await blogService.getBlogs(skip, limit, followed.map(user => user.id));

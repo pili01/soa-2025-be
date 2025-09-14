@@ -6,8 +6,9 @@ import (
 )
 
 type User struct {
-	ID       int    `json:"id"`
-	Username string `json:"username"`
+	ID           int    `json:"id"`
+	Username     string `json:"username"`
+	FollowedByMe bool   `json:"followedByMe"`
 }
 
 type Users []*User

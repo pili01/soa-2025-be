@@ -229,7 +229,7 @@ func (pr *FollowerRepo) Unfollow(follower *User, unfollowed *User) (user string,
 	returnedValue, err := session.ExecuteWrite(ctx,
 		func(transaction neo4j.ManagedTransaction) (any, error) {
 			result, err := transaction.Run(ctx,
-				"MATCH (a:User) - [r:FOLLOWS]-(b:User) WHERE a.id = $followerId AND b.id = $unfollowedId DELETE r RETURN b.username AS username",
+				"MATCH (a:User) - [r:FOLLOWS]->(b:User) WHERE a.id = $followerId AND b.id = $unfollowedId DELETE r RETURN b.username AS username",
 				map[string]any{"followerId": follower.ID, "unfollowedId": unfollowed.ID})
 			if err != nil {
 				return nil, err
