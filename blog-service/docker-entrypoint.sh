@@ -1,10 +1,13 @@
 #!/bin/sh
-
 set -e
 
-echo "Running database migrations..."
+echo "Ensuring schema is in sync..."
 
-npx prisma migrate deploy
+if [ -z "$(find prisma/migrations -maxdepth 1 -type d ! -path 'prisma/migrations' 2>/dev/null)" ]; then
+  npx prisma db push
+else
+  npx prisma migrate deploy
+fi
 
-echo "Migrations applied. Starting the application..."
+echo "Starting the application..."
 exec "$@"
