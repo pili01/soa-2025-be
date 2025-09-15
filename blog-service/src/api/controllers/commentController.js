@@ -28,7 +28,7 @@ exports.createComment = async (req, res, next) => {
             });
         }
         console.log("Checking if user is followed...");
-        if (!(await followerService.isUserFollowedByMe(req.headers.authorization, blog.userId))) {
+        if (!(await followerService.isUserFollowedByMe(req.headers.authorization, blog.userId)) && blog.userId !== data.userId) {
             return res.status(403).json({
                 success: false,
                 message: "Forbidden: You are not allowed to comment on this blog, you must follow the author."
