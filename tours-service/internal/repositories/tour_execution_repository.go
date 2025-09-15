@@ -23,6 +23,30 @@ func NewTourExecutionRepository(db *mongo.Database) *TourExecutionRepository {
 	}
 }
 
+func (r *TourExecutionRepository) FindByUserId(userId int) ([]*models.TourExecution, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+	filter := bson.M{"user_id": userId}
+	cursor, err := r.TourExCollection.Find(ctx, filter)
+	if err != nil {
+		return nil, err
+	}
+	defer cursor.Close(ctx)
+
+	var executions []*models.TourExecution
+	for cursor.Next(ctx) {
+		var execution models.TourExecution
+		if err := cursor.Decode(&execution); err != nil {
+			return nil, err
+		}
+		executions = append(executions, &execution)
+	}
+	if err := cursor.Err(); err != nil {
+		return nil, err
+	}
+	return executions, nil
+}
+
 func (r *TourExecutionRepository) FindByUserAndTourId(userId, tourId int) (*models.TourExecution, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()

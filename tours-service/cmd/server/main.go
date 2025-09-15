@@ -89,6 +89,8 @@ func main() {
 
 	// -- Execution routes --
 	executionRouter := api.PathPrefix("/execution").Subrouter()
+	executionRouter.HandleFunc("/my-executions", TourExecutionHandler.GetExecutionsByUser).Methods("GET")
+	executionRouter.HandleFunc("/tour/{tour_id}", TourExecutionHandler.GetMyExecutionByTourID).Methods("GET")
 	executionRouter.HandleFunc("/start/{tour_id}", TourExecutionHandler.StartTourExecution).Methods("POST")
 	executionRouter.HandleFunc("/abort/{tour_id}", TourExecutionHandler.AbortExecution).Methods("POST")
 	executionRouter.HandleFunc("/is-keypoint-reached/{tour_id}", TourExecutionHandler.CheckIsKeyPointReached).Methods("POST")

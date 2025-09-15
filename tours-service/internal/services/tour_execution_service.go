@@ -67,6 +67,22 @@ func (tes *TourExecutionService) AbortExecution(tourId, userId int) (int, error)
 	return tes.TourExecutionRepository.AbortExecution(tourExecution)
 }
 
+func (tes *TourExecutionService) GetExecutionsByUser(userId int) ([]*models.TourExecution, int, error) {
+	executions, err := tes.TourExecutionRepository.FindByUserId(userId)
+	if err != nil {
+		return nil, http.StatusInternalServerError, fmt.Errorf("database error: %w", err)
+	}
+	return executions, http.StatusOK, nil
+}
+
+func (tes *TourExecutionService) GetMyExecutionByTourID(userId, tourId int) (*models.TourExecution, int, error) {
+	tourExecution, err := tes.TourExecutionRepository.FindByUserAndTourId(userId, tourId)
+	if err != nil {
+		return nil, http.StatusInternalServerError, fmt.Errorf("database error: %w", err)
+	}
+	return tourExecution, http.StatusOK, nil
+}
+
 func (tes *TourExecutionService) CheckIsKeyPointReached(tourId, userId int, long, lat float64) (int, *models.Keypoint, bool, error) {
 	tourExecution, err := tes.TourExecutionRepository.FindByUserAndTourId(userId, tourId)
 	if err != nil {
@@ -94,7 +110,7 @@ func (tes *TourExecutionService) CheckIsKeyPointReached(tourId, userId int, long
 	}
 	fmt.Println("Next uncompleted key point is " + keyPoint.Name)
 
-	if !tes.checkDistance(long, lat, keyPoint.Longitude, keyPoint.Latitude, 20.0) {
+	if !tes.checkDistance(long, lat, keyPoint.Longitude, keyPoint.Latitude, 50.0) {
 		return http.StatusOK, nil, false, fmt.Errorf("you are not close enough to complete key point")
 	}
 

@@ -61,6 +61,51 @@ func (h *TourExecutionHandler) StartTourExecution(w http.ResponseWriter, r *http
 	}
 }
 
+func (h *TourExecutionHandler) GetExecutionsByUser(w http.ResponseWriter, r *http.Request) {
+	userID, err := h.authService.ValidateAndGetUserID(r, "Tourist")
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusUnauthorized)
+		return
+	}
+	executions, httpStatus, err := h.tourExecutionService.GetExecutionsByUser(userID)
+	if err != nil {
+		http.Error(w, err.Error(), httpStatus)
+		return
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(httpStatus)
+	if err := json.NewEncoder(w).Encode(executions); err != nil {
+		http.Error(w, "failed to write response", http.StatusInternalServerError)
+		return
+	}
+}
+
+func (h *TourExecutionHandler) GetMyExecutionByTourID(w http.ResponseWriter, r *http.Request) {
+	userID, err := h.authService.ValidateAndGetUserID(r, "Tourist")
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusUnauthorized)
+		return
+	}
+	vars := mux.Vars(r)
+	tourIdStr := vars["tour_id"]
+	tourId, err := strconv.Atoi(tourIdStr)
+	if err != nil {
+		http.Error(w, "Invalid or missing tour_id", http.StatusBadRequest)
+		return
+	}
+	execution, httpStatus, err := h.tourExecutionService.GetMyExecutionByTourID(userID, tourId)
+	if err != nil {
+		http.Error(w, err.Error(), httpStatus)
+		return
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(httpStatus)
+	if err := json.NewEncoder(w).Encode(execution); err != nil {
+		http.Error(w, "failed to write response", http.StatusInternalServerError)
+		return
+	}
+}
+
 func (h *TourExecutionHandler) AbortExecution(w http.ResponseWriter, r *http.Request) {
 	userId, err := h.authService.ValidateAndGetUserID(r, "Tourist")
 	if err != nil {
