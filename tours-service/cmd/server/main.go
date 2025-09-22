@@ -43,6 +43,7 @@ func main() {
 	keypointRepo := repositories.NewKeypointRepository(toursDB)
 	reviewRepo := repositories.NewTourReviewRepository(toursDB)
 	tourExecutionRepo := repositories.NewTourExecutionRepository(toursDB)
+	capacityRepo := repositories.NewTourCapacityRepository(toursDB)
 
 	// --- Services ---
 	mapService := services.NewMapService(os.Getenv("MAP_SERVICE_URL"))
@@ -52,12 +53,15 @@ func main() {
 	authService := services.NewAuthService()
 	purchaseService := services.NewPurchaseService()
 	tourExecutionService := services.NewTourExecutionService(tourExecutionRepo, tourService, keypointService)
+	capacityService := services.NewTourCapacityService(capacityRepo)
+
 
 	// --- HTTP Handlers ---
 	tourHandler := handlers.NewTourHandler(tourService, keypointService, tourReviewService, authService)
 	keypointHandler := handlers.NewKeypointHandler(keypointService, tourService, authService)
 	reviewHandler := handlers.NewTourReviewHandler(tourReviewService, tourService, authService)
 	TourExecutionHandler := handlers.NewTourExecutionHandler(tourExecutionService, authService, purchaseService)
+	capHandler := handlers.NewCapacityHandler(capacityService, tourService, authService)
 
 	router := mux.NewRouter()
 	api := router.PathPrefix("/api").Subrouter()
@@ -94,6 +98,13 @@ func main() {
 	executionRouter.HandleFunc("/start/{tour_id}", TourExecutionHandler.StartTourExecution).Methods("POST")
 	executionRouter.HandleFunc("/abort/{tour_id}", TourExecutionHandler.AbortExecution).Methods("POST")
 	executionRouter.HandleFunc("/is-keypoint-reached/{tour_id}", TourExecutionHandler.CheckIsKeyPointReached).Methods("POST")
+
+	// Tour capacity 
+	api.HandleFunc("/capacity/{tourId}", capHandler.GetCapacity).Methods("GET")
+	api.HandleFunc("/capacity/{tourId}", capHandler.InitOrUpdateCapacity).Methods("PUT")
+	api.HandleFunc("/capacity/{tourId}/consume", capHandler.ConsumeSeats).Methods("POST")
+	api.HandleFunc("/capacity/{tourId}/release", capHandler.ReleaseSeats).Methods("POST")
+
 
 	// --- Start gRPC Server ---
 	grpcLis, err := net.Listen("tcp", ":50051")

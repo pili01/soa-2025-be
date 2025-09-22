@@ -112,6 +112,11 @@ func (r *Router) setupRoutes() {
 			toursGroup.GET("/execution/tour/:tour_id", r.handleServiceRequest("tours"))
 			toursGroup.GET("/execution/my-executions", r.handleServiceRequest("tours"))
 			toursGroup.POST("/execution/is-keypoint-reached/:tour_id", r.handleServiceRequest("tours"))
+
+			toursGroup.GET("/capacity/:tourId", r.handleServiceRequest("tours"))
+			toursGroup.PUT("/capacity/:tourId", r.handleServiceRequest("tours"))
+			toursGroup.POST("/capacity/:tourId/consume", r.handleServiceRequest("tours"))
+			toursGroup.POST("/capacity/:tourId/release", r.handleServiceRequest("tours"))
 		}
 
 		// Purchase service routes - IZVAN toursGroup!
