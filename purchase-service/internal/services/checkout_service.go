@@ -1,9 +1,10 @@
 package services
 
 import (
-	"errors"
-	"fmt"
-	"log"
+	"context"
+	"time"
+
+	events "example.com/common/saga/purchase_tour"
 
 	"purchase-service/internal/models"
 	"purchase-service/internal/repositories"
@@ -12,20 +13,49 @@ import (
 )
 
 type CheckoutService struct {
-	cartRepo  *repositories.ShoppingCartRepository
-	itemRepo  *repositories.OrderItemRepository
-	tokenRepo *repositories.TourPurchaseTokenRepository
+	cartRepo    *repositories.ShoppingCartRepository
+	itemRepo    *repositories.OrderItemRepository
+	tokenRepo   *repositories.TourPurchaseTokenRepository
+	cartService *CartService
 }
 
-func NewCheckoutService(cartRepo *repositories.ShoppingCartRepository, itemRepo *repositories.OrderItemRepository, tokenRepo *repositories.TourPurchaseTokenRepository) *CheckoutService {
+func (s *CheckoutService) IssueTokensForItems(
+	ctx context.Context,
+	purchaseID string,
+	touristID int,
+	items []events.BuyTourItem,
+) error {
+	for _, it := range items {
+		qty := it.Quantity
+		if qty <= 0 {
+			qty = 1
+		}
+		for i := 0; i < qty; i++ {
+			token := &models.TourPurchaseToken{
+				TouristID:   touristID,
+				TourID:      it.TourID,
+				Token:       uuid.New().String(),
+				PurchasedAt: time.Now(),
+			}
+			if err := s.tokenRepo.CreateToken(token); err != nil {
+				return err
+			}
+		}
+	}
+
+	return nil
+}
+
+func NewCheckoutService(cartRepo *repositories.ShoppingCartRepository, itemRepo *repositories.OrderItemRepository, tokenRepo *repositories.TourPurchaseTokenRepository, cartService *CartService) *CheckoutService {
 	return &CheckoutService{
-		cartRepo:  cartRepo,
-		itemRepo:  itemRepo,
-		tokenRepo: tokenRepo,
+		cartRepo:    cartRepo,
+		itemRepo:    itemRepo,
+		tokenRepo:   tokenRepo,
+		cartService: cartService,
 	}
 }
 
-func (s *CheckoutService) ProcessCheckout(touristID int, request *models.CheckoutRequest) (*models.CheckoutResponse, error) {
+/*func (s *CheckoutService) ProcessCheckout(touristID int, request *models.CheckoutRequest) (*models.CheckoutResponse, error) {
 
 	cart, err := s.cartRepo.GetCartByTouristID(touristID)
 	if err != nil {
@@ -86,7 +116,7 @@ func (s *CheckoutService) ProcessCheckout(touristID int, request *models.Checkou
 		Tokens:  tokens,
 		Message: "Checkout completed successfully",
 	}, nil
-}
+}*/
 
 func (s *CheckoutService) GetPurchaseHistory(touristID int) (*models.PurchaseHistoryResponse, error) {
 	tokens, err := s.tokenRepo.GetTokensByTouristID(touristID)
@@ -106,4 +136,14 @@ func (s *CheckoutService) ValidateToken(tokenValue string, tourID int) (bool, er
 
 func (s *CheckoutService) CheckIsPurchased(touristID int, tourID int) (bool, error) {
 	return s.tokenRepo.CheckIsPurchased(touristID, tourID)
+}
+
+func (s *CheckoutService) ClearCart(cartID int) error {
+	// itemRepo je već dostupan u CheckoutService strukturi
+	return s.itemRepo.ClearCart(cartID)
+}
+
+func (s *CheckoutService) GetCartForUser(touristID int) (*models.ShoppingCartResponse, error) {
+	// Poziva metodu iz servisa koji je za to zadužen.
+	return s.cartService.GetCart(touristID)
 }

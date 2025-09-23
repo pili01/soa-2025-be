@@ -190,4 +190,49 @@ if (collectionNames.includes('tourExecution')) {
     console.log("Indexes for 'tourExecution' collection created/ensured.");
 }
 
+console.log(`Checking for 'tour_capacities' collection in database: ${process.env.MONGO_INITDB_DATABASE}`);
+
+if (collectionNames.includes('tour_capacities')) {
+  console.log("'tour_capacities' collection already exists. Skipping creation.");
+} else {
+  console.log("'tour_capacities' collection does not exist. Creating now...");
+  db.createCollection('tour_capacities', {
+    validator: {
+      $jsonSchema: {
+        bsonType: "object",
+        required: ["tourId", "capacity", "availableSeats", "updatedAt"],
+        properties: {
+          tourId: {
+            bsonType: "int",
+            description: "must be an integer and is required (references Tour._id)"
+          },
+          capacity: {
+            bsonType: "int",
+            minimum: 0,
+            description: "total number of seats; must be >= 0 and is required"
+          },
+          availableSeats: {
+            bsonType: "int",
+            minimum: 0,
+            description: "currently free seats; must be >= 0 and is required"
+          },
+          updatedAt: {
+            bsonType: "date",
+            description: "last update timestamp; is required"
+          }
+        }
+      }
+    }
+  });
+
+  console.log("Collection 'tour_capacities' created with validation rules.");
+
+  db.tour_capacities.createIndex({ "tourId": 1 }, { unique: true });
+
+  db.tour_capacities.createIndex({ "updatedAt": 1 });
+
+  console.log("Indexes for 'tour_capacities' collection created/ensured.");
+}
+
+
 console.log("Database initialization script finished.");
