@@ -1,11 +1,34 @@
 services:
+  fluent-bit:
+    image: grafana/fluent-bit-plugin-loki:main
+    container_name: fluent-bit
+    environment:
+      - LOKI_URL=http://loki:3100/loki/api/v1/push
+    volumes:
+      - ./fluent-bit/fluent-bit.conf:/fluent-bit/etc/fluent-bit.conf
+    ports:
+      - "24224:24224"
+      - "24224:24224/udp"
+    networks:
+      - soa-network
+    depends_on:
+      - loki
+
+  loki:
+    image: grafana/loki:main-5206e3a
+    container_name: loki
+    volumes:
+      - loki:/loki
+    networks:
+      - soa-network
+
   grafana:
     image: grafana/grafana:8.5.3
     ports:
       - "3300:3000"
     environment:
       GF_RENDERING_SERVER_URL: http://renderer:8081/render
-      GF_RENDERING_CALLBACK_URL: http://grafana:3300/
+      GF_RENDERING_CALLBACK_URL: http://grafana:3000/
       GF_LOG_FILTERS: rendering:debug
     volumes:
       - grafana:/var/lib/grafana
@@ -13,6 +36,9 @@ services:
       - ./grafana/provisioning:/etc/grafana/provisioning
     networks:
       - soa-network
+    depends_on:
+      - loki
+      - prometheus
 
   renderer:
     image: grafana/grafana-image-renderer:3.10.5
@@ -23,6 +49,7 @@ services:
 
   prometheus:
     image: prom/prometheus:v2.35.0
+    container_name: prometheus
     restart: on-failure
     ports:
       - "9090:9090"
@@ -32,10 +59,20 @@ services:
     networks:
       - soa-network
 
+  jaeger:
+    image: jaegertracing/all-in-one:1.34
+    ports:
+      - "9000:16686"
+      - "14268:14268"
+      - "4317:4317"
+      - "4318:4318"
+    networks:
+      - soa-network
+
   cadvisor:
     image: gcr.io/cadvisor/cadvisor:v0.47.2
     ports:
-      - "8880:8080"
+      - "8886:8080"
     volumes:
       - /:/rootfs:ro
       - /var/run:/var/run:rw
@@ -44,13 +81,11 @@ services:
     networks:
       - soa-network
 
-
 volumes:
   grafana:
-    name: grafana
   prometheus:
-    name: prometheus
+  loki:
 
 networks:
   soa-network:
-    name: soa-network
+    external: true

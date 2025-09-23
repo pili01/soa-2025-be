@@ -1,10 +1,11 @@
 package services
 
 import (
+	"log"
 	"purchase-service/internal/models"
 
-	events "github.com/tamararankovic/microservices_demo/common/saga/create_order"
-	saga "github.com/tamararankovic/microservices_demo/common/saga/messaging"
+	saga "example.com/common/saga/messaging"
+	events "example.com/common/saga/purchase_tour"
 )
 
 type TourPurchaseOrchestrator struct {
@@ -25,28 +26,30 @@ func NewTourPurchaseOrchestrator(publisher saga.Publisher, subscriber saga.Subsc
 
 func (o *TourPurchaseOrchestrator) Start(purchaseID string, cart models.ShoppingCartResponse) error {
 	cmd := &events.BuyTourCommand{
+		Type: events.ReserveCapacity,
 		Purchase: events.BuyTourDetails{
 			PurchaseID: purchaseID,
 			CartID:     cart.ID,
 			TouristID:  cart.TouristID,
 			Items:      make([]events.BuyTourItem, 0, len(cart.Items)),
 		},
-		Type: events.ReserveCapacity,
 	}
-
 	for _, it := range cart.Items {
 		cmd.Purchase.Items = append(cmd.Purchase.Items, events.BuyTourItem{
 			TourID:   it.TourID,
 			Quantity: it.Quantity,
 		})
 	}
-
 	return o.commandPublisher.Publish(cmd)
 }
 
 func (o *TourPurchaseOrchestrator) handle(reply *events.BuyTourReply) {
 
 	next := o.nextCommandType(reply.Type)
+	if next == events.UnknownCommand {
+		log.Printf("[Orchestrator] Saga for purchase %s has finished or been aborted.", reply.Purchase.PurchaseID) // <-- DODAJTE
+		return
+	}
 	if next == events.UnknownCommand {
 		return
 	}
@@ -55,30 +58,29 @@ func (o *TourPurchaseOrchestrator) handle(reply *events.BuyTourReply) {
 		Purchase: reply.Purchase,
 		Type:     next,
 	}
+	log.Printf("[Orchestrator] Sending next command '%s' for purchase %s", cmd.Type, cmd.Purchase.PurchaseID)
 	_ = o.commandPublisher.Publish(cmd)
 }
 
-func (o *TourPurchaseOrchestrator) nextCommandType(reply events.BuyTourReplyType) events.BuyTourCommandType {
-	switch reply {
-
+func (o *TourPurchaseOrchestrator) nextCommandType(rt events.BuyTourReplyType) events.BuyTourCommandType {
+	switch rt {
+	// HAPPY PATH
 	case events.CapacityReserved:
 		return events.IssueTokens
-
-	case events.CapacityNotReserved:
-		return events.AbortPurchase
-
-	case events.CapacityReleased:
-		return events.AbortPurchase
-
-	case events.CapacityReleaseFailed:
-		return events.AbortPurchase
-
 	case events.TokensIssued:
 		return events.CompletePurchase
 
+	// FAIL GRANE
+	case events.CapacityNotReserved:
+		return events.AbortPurchase
 	case events.TokensNotIssued:
 		return events.ReleaseCapacity
+	case events.CapacityReleased:
+		return events.AbortPurchase
+	case events.CapacityReleaseFailed:
+		return events.AbortPurchase
 
+	// TERMINAL
 	case events.PurchaseCompleted, events.PurchaseAborted:
 		return events.UnknownCommand
 

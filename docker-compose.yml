@@ -1,3 +1,8 @@
+x-logging: &fluent-bit
+  driver: fluentd
+  options:
+    fluentd-address: ${FLUENT_BIT_ADDRESS}:24224
+
 services:
   # Gateway service - main entry point
   gateway:
@@ -6,15 +11,15 @@ services:
       dockerfile: Dockerfile
     container_name: soa-gateway
     ports:
-      - "8080:8080"  # Main gateway port
+      - "8080:8080"
     environment:
       - GATEWAY_PORT=8080
       - BLOG_SERVICE_URL=http://blog-service:3000
       - IMAGE_SERVICE_URL=http://image-service:3000
       - STAKEHOLDERS_SERVICE_URL=http://stakeholders-service:8080
       - FOLLOWER_SERVICE_URL=http://follower-service:8080
-      - TOURS_SERVICE_GRPC_URL=tours-service:50051   # RPC
-      - TOURS_SERVICE_API_URL=http://tours-service:8080   # REST
+      - TOURS_SERVICE_GRPC_URL=tours-service:50051
+      - TOURS_SERVICE_API_URL=http://tours-service:8080
       - PURCHASE_SERVICE_URL=http://purchase-service:8080
       - JWT_SECRET=U1aZEDdXc8r+07B7Ez9eBl8Yec3H1oD06rGecIuhV4k=
     depends_on:
@@ -32,8 +37,6 @@ services:
     container_name: stakeholders-db
     env_file:
       - ./stakeholders-service/db/.env
-    expose:
-    - "8080"
     ports:
       - "5433:5432"
     healthcheck:
@@ -52,7 +55,10 @@ services:
       dockerfile: .Dockerfile
     container_name: stakeholders-service
     ports:
-      - "8081:8080"  # Changed port to avoid conflict with gateway
+      - "8081:8080"
+    logging: *fluent-bit
+    environment:
+      - JAEGER_ENDPOINT=http://jaeger:14268/api/traces
     depends_on:
       stakeholders-db:
         condition: service_healthy
@@ -86,7 +92,8 @@ services:
     container_name: blog_service_app
     restart: always
     ports:
-      - "3000:3000"  # Keep internal port for gateway access
+      - "3000:3000"
+    logging: *fluent-bit
     depends_on:
       blog-db:
         condition: service_healthy
@@ -113,13 +120,12 @@ services:
       
   tours-service:
     build:
-      context: ./tours-service
-      dockerfile: .Dockerfile
+      context: .
+      dockerfile: ./tours-service/.Dockerfile
     container_name: tours-service
-    expose:
-    - "50051" # gRPC port only inside the network
     ports:
-      - "8082:8080"  
+      - "8082:8080"
+    logging: *fluent-bit
     depends_on:
       tours-db:
         condition: service_healthy
@@ -133,7 +139,7 @@ services:
       dockerfile: .Dockerfile
     container_name: image-service
     ports:
-      - "3001:3000" 
+      - "3001:3000"
     env_file:
       - ./image-service/.env
     volumes:
@@ -147,7 +153,7 @@ services:
       dockerfile: .Dockerfile
     container_name: map-service
     ports:
-      - "3002:3000"  
+      - "3002:3000"
     env_file:
       - ./map-service/.env
     restart: unless-stopped
@@ -159,7 +165,6 @@ services:
       dockerfile: .Dockerfile
     restart: always
     container_name: "follower-server"
-    hostname: "follower-server"
     ports:
       - "8083:8080"
     env_file:
@@ -171,6 +176,7 @@ services:
 
   neo4j:
     image: neo4j:4.4
+    container_name: neo4j
     restart: always
     ports:
       - "7687:7687"
@@ -204,11 +210,12 @@ services:
 
   purchase-service:
     build:
-      context: ./purchase-service
-      dockerfile: .Dockerfile
+      context: .
+      dockerfile: ./purchase-service/.Dockerfile
     container_name: purchase-service
     ports:
       - "8084:8080"
+    logging: *fluent-bit
     depends_on:
       - purchase-db
       - tours-service
@@ -217,16 +224,23 @@ services:
       - ./purchase-service/.env
     networks: [soa-network]
 
-networks:
-  soa-network:
-    driver: bridge
+  nats-server:
+    image: nats:latest
+    container_name: nats-server
+    ports:
+      - "4222:4222"
+      - "8222:8222"
+    command: "-js"
+    networks: [soa-network]
+    restart: unless-stopped
 
 volumes:
   stakeholders-db-data:
   blog-db-data:
   tours-db-data:
   neo4j-data:
-
-
-
   purchase-db-data:
+
+networks:
+  soa-network:
+    external: true

@@ -11,6 +11,9 @@ import (
 	"purchase-service/internal/services"
 
 	"github.com/gorilla/mux"
+
+	saga "github.com/tamararankovic/microservices_demo/common/saga/messaging"
+	natsmsg "github.com/tamararankovic/microservices_demo/common/saga/messaging/nats"
 )
 
 func main() {
@@ -20,16 +23,28 @@ func main() {
 	}
 	defer database.Close()
 
+	cfg := loadConfig()
+
+	orchestratorPublisher := mustPublisher(cfg, cfg.CommandSubject)
+	orchestratorSubscriber := mustSubscriber(cfg, cfg.ReplySubject, "orchestrator")
+
+	orchestrator, err := services.NewTourPurchaseOrchestrator(orchestratorPublisher, orchestratorSubscriber)
+
 	cartRepo := repositories.NewShoppingCartRepository(database)
 	itemRepo := repositories.NewOrderItemRepository(database)
 	tokenRepo := repositories.NewTourPurchaseTokenRepository(database)
 
 	cartService := services.NewCartService(cartRepo, itemRepo)
-	checkoutService := services.NewCheckoutService(cartRepo, itemRepo, tokenRepo)
+	checkoutService := services.NewCheckoutService(cartRepo, itemRepo, tokenRepo, cartService)
 	authService := services.NewAuthService()
 
+	handlerPublisher := mustPublisher(cfg, cfg.ReplySubject)
+	handlerSubscriber := mustSubscriber(cfg, cfg.CommandSubject, "purchase_handler_group")
+
+	_, err = handlers.NewCreatePurchaseCommandHandler(checkoutService, handlerPublisher, handlerSubscriber)
+
 	cartHandler := handlers.NewCartHandler(cartService, authService)
-	checkoutHandler := handlers.NewCheckoutHandler(checkoutService, authService)
+	checkoutHandler := handlers.NewCheckoutHandler(checkoutService, authService, orchestrator)
 
 	router := mux.NewRouter()
 
@@ -49,4 +64,51 @@ func main() {
 
 	log.Printf("Starting purchase service on port %s", port)
 	log.Fatal(http.ListenAndServe(":"+port, router))
+}
+
+type config struct {
+	NatsHost string
+	NatsPort string
+	NatsUser string
+	NatsPass string
+
+	CommandSubject string
+	ReplySubject   string
+	QueueGroup     string
+}
+
+func loadConfig() config {
+	c := config{
+		NatsHost:       getenv("NATS_HOST", "localhost"),
+		NatsPort:       getenv("NATS_PORT", "4222"),
+		NatsUser:       getenv("NATS_USER", ""),
+		NatsPass:       getenv("NATS_PASS", ""),
+		CommandSubject: getenv("PURCHASE_COMMAND_SUBJECT", "purchase.checkout.command"),
+		ReplySubject:   getenv("PURCHASE_REPLY_SUBJECT", "purchase.checkout.reply"),
+		QueueGroup:     getenv("NATS_QUEUE_GROUP", "purchase_service"),
+	}
+	return c
+}
+
+func getenv(k, def string) string {
+	if v := os.Getenv(k); v != "" {
+		return v
+	}
+	return def
+}
+
+func mustPublisher(cfg config, subject string) saga.Publisher {
+	pub, err := natsmsg.NewNATSPublisher(cfg.NatsHost, cfg.NatsPort, cfg.NatsUser, cfg.NatsPass, subject)
+	if err != nil {
+		log.Fatalf("nats publisher for subject %s: %v", subject, err)
+	}
+	return pub
+}
+
+func mustSubscriber(cfg config, subject string, queueGroup string) saga.Subscriber {
+	sub, err := natsmsg.NewNATSSubscriber(cfg.NatsHost, cfg.NatsPort, cfg.NatsUser, cfg.NatsPass, subject, queueGroup)
+	if err != nil {
+		log.Fatalf("nats subscriber for subject %s: %v", subject, err)
+	}
+	return sub
 }
